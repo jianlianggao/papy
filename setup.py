@@ -1,4 +1,4 @@
-﻿#! /usr/bin/env python
+﻿#!/usr/bin/env python
 from setuptools import setup, find_packages
 
 setup(name='papy',
@@ -7,7 +7,7 @@ setup(name='papy',
       author='Gonçalo Correia, Jianliang Gao',
       author_email='j.gao@imperial.ac.uk',
       url='',
-      scripts=["pa.py"],
+      scripts=["papy/pa.py"],
       install_requires=["numpy","scipy","joblib","multiprocessing", "statsmodels", "matplotlib"],
       packages=find_packages(),
       )
