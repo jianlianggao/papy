@@ -42,7 +42,7 @@ def SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
     pp.savefig()
     pp.close()
     
-    plt.show()
+    #plt.show()
     
 if __name__=="__main__":
     SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps)
