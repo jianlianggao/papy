@@ -7,7 +7,7 @@ setup(name='papy',
       author='Gonçalo Correia, Jianliang Gao',
       author_email='j.gao@imperial.ac.uk',
       url='',
-      scripts=["papy/pa.py"],
+      scripts=["pa.py"],
       install_requires=["numpy","scipy","joblib","multiprocessing", "statsmodels", "matplotlib"],
       packages=find_packages(),
       )
