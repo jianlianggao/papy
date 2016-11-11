@@ -974,7 +974,7 @@ def read2array(filename):
     return dataArray
 def main():    
     ## read the data into an array;
-    XSRV = read2array('paTest.csv')
+    XSRV = read2array('TutorialData.csv')
     
     ##print array size
     if (XSRV.ndim > 1):
