@@ -975,7 +975,8 @@ def read2array(filename):
 def main():    
     ## read the data into an array;
     XSRV = read2array('TutorialData.csv')
-    
+    if (type(XSRV).__name__ != 'ndarray'):
+        XSRV = np.array(XSRV)
     ##print array size
     if (XSRV.ndim > 1):
         rows = XSRV.shape[0]
