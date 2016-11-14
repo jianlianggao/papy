@@ -5,7 +5,7 @@ Developed by Dr. Goncalo Correia and Dr Jianliang Gao
 Imperial College London
 2016
 """
-import os,sys,csv,inspect,dis,os.path,random,multiprocessing
+import os,sys,csv,inspect,dis,os.path,random,multiprocessing,getopt
 import numpy as np
 import scipy.stats as scistats
 import statsmodels.formula.api as sm                    #for linear regression
@@ -45,7 +45,8 @@ def SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
     
     #for saving the plot to pdf file
     #To make a multi-page pdf file, first initialize the file:
-    pp = PdfPages('multipage.pdf')
+    save_filename = 'resutls_%s.pdf'%(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    pp = PdfPages(save_filename)
     
     #give the PdfPages object to savefig()
     plt.savefig(pp, format='pdf')
@@ -972,9 +973,12 @@ def read2array(filename):
         print filename + " does not exist!"
         
     return dataArray
-def main():    
+def main(argv1, argv2): 
+    ##take input arguments
+    print argv1
+    print argv2   
     ## read the data into an array;
-    XSRV = read2array('./TutorialData.csv')
+    XSRV = read2array(argv1)
     if (type(XSRV).__name__ != 'ndarray'):
         XSRV = np.array(XSRV)
     ##print array size
@@ -1006,21 +1010,24 @@ def main():
     diffgroups = np.array([])
     linearregression = np.array([])
     t_start = datetime.now()
-    diffgroups = PCalc_2Group(XSRV[:,np.arange(0,8)],effectSizes, sampleSizes, 0.05, 5000, numberreps);
-    linearregression = PCalc_Continuous(XSRV[:,np.arange(0,8)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
-    t_end = datetime.now()
-    print 'Part II A -time collapsed: ' + str(t_end-t_start)
+    num_cols = int(argv2)
+    if (num_cols > 0):
+        diffgroups = PCalc_2Group(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps);
+        linearregression = PCalc_Continuous(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+        t_end = datetime.now()
+        print 'Part II A -time collapsed: ' + str(t_end-t_start)
     ## ## ## Surface plot function (see details in bottom of tutorial)
     ## ## SurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
 
 
     ## ## Run the code for all variables. Each analysis takes around 1h on a 4 core desktop. To speed up, use less effect and sample 
     ## ## sample sizes and a smaller number of repeats
-    ## t_start = datetime.now()
-    ## diffgroups = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
-    ## linearregression = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
-    ## t_end = datetime.now()
-    ## print 'Part II B -time collapsed: ' + str(t_end-t_start)
+    else:
+        t_start = datetime.now()
+        diffgroups = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
+        linearregression = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
+        t_end = datetime.now()
+        print 'Part II B -time collapsed: ' + str(t_end-t_start)
 
     '''
     Using the SurfacePlot function to visualize results 
@@ -1046,4 +1053,7 @@ def main():
     SurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
               
 if __name__=="__main__":
-    main()
+    try:
+        main(sys.argv[1], sys.argv[2])
+    except:
+        print 'usage: python pa.py <data filename> <number of columns, 0 for use whole data set>'
