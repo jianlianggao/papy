@@ -76,7 +76,8 @@ def simulateLogNormal(data, covType, nSamples):
         covLog=np.diag(varlogData)               #generate a matrix with diagonal of variance of log Data
     else:
         print 'Unknown Covariance type'   
-        
+    
+    np.random.seed(10)                                  ##add random seed for testing purpose    
     simData = np.random.multivariate_normal(np.transpose(meansLog),covLog,nSamples)
     
     simData = np.exp(simData)
@@ -236,6 +237,7 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                     SelSamples =  SelSamples/stDev
                     
                     noiseLevel = 1
+                    np.random.seed(10)                                  ##add random seed for testing purpose
                     noise = noiseLevel*np.random.randn(sampSizes[0][currSampSize],1)
                     
                     Y = SelSamples[:, np.array([currVar])]*b1[currVar][0]
@@ -427,6 +429,8 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
     
 def randperm1(totalLen):
     #function of random permuation and pick up the sub array according to the specified size
+    
+    np.random.seed(10)                                  ##add random seed for testing purpose
     tempList = np.random.permutation(totalLen)                  ##generate a random permutation array
     return tempList
 ##=======End of PCalc_Continuous====================
@@ -778,7 +782,9 @@ def _chunkMatrix(data, num): ##different from Caroline's one, which uses list
 
 def randperm(totalLen, subLen):
     #function of random permuation and pick up the sub array according to the specified size
+    np.random.seed(10)                                  ##add random seed for testing purpose
     tempList = np.random.permutation(totalLen)                  ##generate a random permutation array
+    random.seed(10)                                  ##add random seed for testing purpose
     tempList1 = random.sample(tempList,subLen)
     return tempList1
 
@@ -1050,7 +1056,11 @@ def main(argv1, argv2):
     The example line below will open the False Negative Rate surface for
     variable number 2 without multiple testing correction
     '''
-    SurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
+    #SurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
+    
+    #write diffgroups and linearregression into file for testing purpose
+    np.savetxt('diffgroups.csv',diffgroups[1][3][1], delimiter=",")
+    np.savetxt('linearregression.csv',linearregression[1][3][1], delimiter=",")
               
 if __name__=="__main__":
     try:
