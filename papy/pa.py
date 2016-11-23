@@ -62,7 +62,7 @@ def iSurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
     )
     data=[go.Surface(x=X,y=Y,z=MUtot)]
     fig = go.Figure(data=data, layout=layout)
-    py.offline.plot(fig, filename='elevations-3d-surface')
+    py.offline.plot(fig, filename='papy_result_surface')
 ##=======End of interactive SurfacePlot============
 
 ##=======Beginning of SurfacePlot=========================
