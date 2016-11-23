@@ -18,6 +18,53 @@ from mpl_toolkits.mplot3d import Axes3D
 # for saving the plot to pdf file 
 from matplotlib.backends.backend_pdf import PdfPages
 
+##=======Beginning of interactive SurfacePlot============
+def iSurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
+    import plotly as py
+    import plotly.graph_objs as go
+    MUtot = output[variable-1][correction-1][metric-1]
+    NS, NSE = MUtot.shape
+    SIGMAtot = output[variable-1][correction-1][metric+5-1]
+    SIGMAlow=MUtot-1.96*SIGMAtot/np.sqrt(nreps)
+    SIGMAlow = np.array([[0 if x<0 else x for x in y] for y in SIGMAlow])
+    
+    ##plot
+    #generate a 2D grid
+    X, Y = np.meshgrid(sizeeff, samplsizes)
+    layout = go.Layout(
+        title='Statistical Power Analysis Resutls',
+        autosize=True,
+        width=500,
+        height=500,
+        margin=go.Margin(
+            l=80,
+            r=40,
+            b=100,
+            t=60
+        ),
+        scene=go.Scene(
+            xaxis=dict(
+                title='Effect Sizes',
+                range=[0,np.max(X)+0.1],
+                ## titlefont=dict(
+                    ## family='Courier New, monospace',
+                ## )
+            ),
+            yaxis=dict(
+                title='Sample Sizes',
+                range=[0,np.max(Y)]
+            ),
+            zaxis=dict(
+                title='Power',
+                range=[-0.1,1.2]
+            )
+        )
+    )
+    data=[go.Surface(x=X,y=Y,z=MUtot)]
+    fig = go.Figure(data=data, layout=layout)
+    py.offline.plot(fig, filename='elevations-3d-surface')
+##=======End of interactive SurfacePlot============
+
 ##=======Beginning of SurfacePlot=========================
 def SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
     MUtot = output[variable-1][correction-1][metric-1]
@@ -53,7 +100,7 @@ def SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
     pp.savefig()
     pp.close()
     
-    #plt.show()
+    plt.show()
 ##=======End of SurfacePlot=========================
 
 ##=======Beginning of simulateLogNormal===================
@@ -77,7 +124,7 @@ def simulateLogNormal(data, covType, nSamples):
     else:
         print 'Unknown Covariance type'   
     
-    np.random.seed(10)                                  ##add random seed for testing purpose    
+    #np.random.seed(10)                                  ##add random seed for testing purpose    
     simData = np.random.multivariate_normal(np.transpose(meansLog),covLog,nSamples)
     
     simData = np.exp(simData)
@@ -237,7 +284,7 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                     SelSamples =  SelSamples/stDev
                     
                     noiseLevel = 1
-                    np.random.seed(10)                                  ##add random seed for testing purpose
+                    #np.random.seed(10)                                  ##add random seed for testing purpose
                     noise = noiseLevel*np.random.randn(sampSizes[0][currSampSize],1)
                     
                     Y = SelSamples[:, np.array([currVar])]*b1[currVar][0]
@@ -430,7 +477,7 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
 def randperm1(totalLen):
     #function of random permuation and pick up the sub array according to the specified size
     
-    np.random.seed(10)                                  ##add random seed for testing purpose
+    #np.random.seed(10)                                  ##add random seed for testing purpose
     tempList = np.random.permutation(totalLen)                  ##generate a random permutation array
     return tempList
 ##=======End of PCalc_Continuous====================
@@ -782,9 +829,9 @@ def _chunkMatrix(data, num): ##different from Caroline's one, which uses list
 
 def randperm(totalLen, subLen):
     #function of random permuation and pick up the sub array according to the specified size
-    np.random.seed(10)                                  ##add random seed for testing purpose
+    #np.random.seed(10)                                  ##add random seed for testing purpose
     tempList = np.random.permutation(totalLen)                  ##generate a random permutation array
-    random.seed(10)                                  ##add random seed for testing purpose
+    #random.seed(10)                                  ##add random seed for testing purpose
     tempList1 = random.sample(tempList,subLen)
     return tempList1
 
@@ -1056,14 +1103,15 @@ def main(argv1, argv2):
     The example line below will open the False Negative Rate surface for
     variable number 2 without multiple testing correction
     '''
-    #SurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
-    
     #write diffgroups and linearregression into file for testing purpose
-    np.savetxt('diffgroups.csv',diffgroups[1][3][1], delimiter=",")
-    np.savetxt('linearregression.csv',linearregression[1][3][1], delimiter=",")
+    #np.savetxt('diffgroups.csv',diffgroups[1][3][1], delimiter=",")
+    #np.savetxt('linearregression.csv',linearregression[1][3][1], delimiter=",")
+    iSurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
+    
+    
               
 if __name__=="__main__":
-    try:
+    #try:
         main(sys.argv[1], sys.argv[2])
-    except:
-        print 'usage: python pa.py <data filename> <number of columns, 0 for use whole data set>'
+    #except:
+    #    print 'usage: python pa.py <data filename> <number of columns, 0 for use whole data set>'
