@@ -14,28 +14,38 @@ from math import fabs,floor,ceil,log,exp
 from datetime import datetime
 from joblib import Parallel, delayed                    #for Parallel computing
 # For 3d plots. This import is necessary to have 3D plotting below
-from mpl_toolkits.mplot3d import Axes3D
+#from mpl_toolkits.mplot3d import Axes3D
 # for saving the plot to pdf file 
-from matplotlib.backends.backend_pdf import PdfPages
+#from matplotlib.backends.backend_pdf import PdfPages
 
 ##=======Beginning of interactive SurfacePlot============
-def iSurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
+def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsizes,nreps):
     import plotly as py
     import plotly.graph_objs as go
     MUtot = output[variable-1][correction-1][metric-1]
     NS, NSE = MUtot.shape
-    SIGMAtot = output[variable-1][correction-1][metric+5-1]
-    SIGMAlow=MUtot-1.96*SIGMAtot/np.sqrt(nreps)
-    SIGMAlow = np.array([[0 if x<0 else x for x in y] for y in SIGMAlow])
+    #SIGMAtot = output[variable-1][correction-1][metric+5-1]
+    #SIGMAlow=MUtot-1.96*SIGMAtot/np.sqrt(nreps)
+    #SIGMAlow = np.array([[0 if x<0 else x for x in y] for y in SIGMAlow])
     
     ##plot
     #generate a 2D grid
     X, Y = np.meshgrid(sizeeff, samplsizes)
+    
+    if metric == 1:
+        zaxis_title = 'True Positive Rate'
+    elif metric == 2:
+        zaxis_title = 'False Positive Rate'
+    elif metric == 3:
+        zaxis_title = 'True Negative Rate'
+    elif metric == 4:
+        zaxis_title = 'False Negative Rate'
+        
     layout = go.Layout(
         title='Statistical Power Analysis Resutls',
         autosize=True,
-        width=500,
-        height=500,
+        width=1024,
+        height=768,
         margin=go.Margin(
             l=80,
             r=40,
@@ -44,27 +54,29 @@ def iSurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
         ),
         scene=go.Scene(
             xaxis=dict(
-                title='Effect Sizes',
+                title='Sample Sizes',
                 range=[0,np.max(X)+0.1],
                 ## titlefont=dict(
                     ## family='Courier New, monospace',
                 ## )
             ),
             yaxis=dict(
-                title='Sample Sizes',
+                title='Effect Sizes',
                 range=[0,np.max(Y)]
             ),
             zaxis=dict(
-                title='Power',
+                title=zaxis_title,
                 range=[-0.1,1.2]
             )
         )
     )
     data=[go.Surface(x=X,y=Y,z=MUtot)]
     fig = go.Figure(data=data, layout=layout)
-    py.offline.plot(fig, filename='papy_result_surface')
+    py.offline.plot(fig, filename=svfilename, auto_open=False)
 ##=======End of interactive SurfacePlot============
 
+''' 
+## This Surface plot method is scrapped.
 ##=======Beginning of SurfacePlot=========================
 def SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
     MUtot = output[variable-1][correction-1][metric-1]
@@ -102,6 +114,7 @@ def SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps):
     
     plt.show()
 ##=======End of SurfacePlot=========================
+'''
 
 ##=======Beginning of simulateLogNormal===================
 def simulateLogNormal(data, covType, nSamples):
@@ -1043,21 +1056,15 @@ def main(argv1, argv2):
         cols = XSRV.shape[0]
     
     print 'Input data matrix size is :' + str(rows) + ',' + str(cols)
-    ## Part I
-    ##Run code for a single effect and sample size combination as a test
-    ## effectSizes = np.array([[0.5]])
-    ## sampleSizes = np.array([[200]])
-    ## numberreps = 10
+
+    effectSizes = np.array([[0.05, 0.1, 0.15,0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]])
+    sampleSizes = np.array([[1, 50, 100, 200, 250, 350, 500, 750, 1000]])
     
-    ## diffgroups = np.array([])
-    ## linearregression = np.array([])
-    ## diffgroups = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
-    ## linearregression = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
+    #define output metric options
+    metric_opt = np.array([1, 2, 3, 4])  #see options description below
+    correction_opt = np.array([1, 2, 3, 4]) #see correction options description below
     
-    ## Part II 
-    ##Define a grid of effect sizes and sample sizes to test
-    effectSizes = np.array([[0.05, 0.1, 0.15,0.2, 0.25, 0.3, 0.35]])
-    sampleSizes = np.array([[50, 100, 200, 250, 350, 500, 750, 1000]])
+    
     numberreps= 10
     ## ## Calculat for a subset of 4 variables (less than 20 seconds on 4-core desktop for each analysis)
     diffgroups = np.array([])
@@ -1068,19 +1075,14 @@ def main(argv1, argv2):
         diffgroups = PCalc_2Group(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps);
         linearregression = PCalc_Continuous(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
         t_end = datetime.now()
-        print 'Part II A -time collapsed: ' + str(t_end-t_start)
-    ## ## ## Surface plot function (see details in bottom of tutorial)
-    ## ## SurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
-
-
-    ## ## Run the code for all variables. Each analysis takes around 1h on a 4 core desktop. To speed up, use less effect and sample 
-    ## ## sample sizes and a smaller number of repeats
+        print 'Time collapsed: ' + str(t_end-t_start)
+   
     else:
         t_start = datetime.now()
         diffgroups = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
         linearregression = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
         t_end = datetime.now()
-        print 'Part II B -time collapsed: ' + str(t_end-t_start)
+        print 'Time collapsed: ' + str(t_end-t_start)
 
     '''
     Using the SurfacePlot function to visualize results 
@@ -1098,18 +1100,81 @@ def main(argv1, argv2):
     1 - No correction
     2 - Bonferroni
     3 - Benjamini-Hochberg
-    4 - Benjamini-Yekutieli
-    
     The example line below will open the False Negative Rate surface for
     variable number 2 without multiple testing correction
     '''
     #write diffgroups and linearregression into file for testing purpose
     #np.savetxt('diffgroups.csv',diffgroups[1][3][1], delimiter=",")
     #np.savetxt('linearregression.csv',linearregression[1][3][1], delimiter=",")
-    iSurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
+    if not os.path.exists('papy_output'):
+        os.makedirs('papy_output')
     
+    #file names matrix
+    sv_filenames = np.array([['tpn', 'tpb', 'tpbh'],['fpn', 'fpb', 'fpbh'], \
+                             ['tnn', 'tnb', 'tnbh'],['fnn', 'fnb', 'fnbh']])    
+    #save the effect sizes and sample sizes
+    file_handle = file('papy_output/effect_n_sample_sizes.txt', 'a')
+    np.savetxt(file_handle, np.array(['effect sizes']), fmt='%s')
+    np.savetxt(file_handle, effectSizes, delimiter="," , fmt='%.3f')
+    np.savetxt(file_handle, np.array(['sample sizes']), fmt='%s')
+    np.savetxt(file_handle, sampleSizes, delimiter=",", fmt='%.3f')
+    file_handle.close()
+        
+    #save files. jj- Metric options; kk- Correction options; ii- Variable number; for example: jj=1, kk=1 mean tpn-- true positive no correction. 
+    for jj in range(0, sv_filenames.shape[0]):
+        for kk in range(0, sv_filenames.shape[1]):
+            file_handle = file('papy_output/diffgroups-%s.csv'%(sv_filenames[jj][kk]), 'a')
+            for ii in range(0, num_cols):            
+                np.savetxt(file_handle, np.array(['variable %s'%(str(ii+1))]), fmt='%s')
+                np.savetxt(file_handle, diffgroups[ii][jj][kk], delimiter=",", fmt='%.5f')
+            file_handle.close()
     
-              
+            file_handle = file('papy_output/linearregression-%s.csv'%(sv_filenames[jj][kk]), 'a')
+            for ii in range(0, num_cols):            
+                np.savetxt(file_handle, np.array(['variable %s'%(str(ii+1))]), fmt='%s')
+                np.savetxt(file_handle, linearregression[ii][jj][kk], delimiter=",", fmt='%.5f')
+            file_handle.close()
+    #iSurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
+    
+    #plot all surface.
+    for jj in range(0, sv_filenames.shape[0]):
+        for kk in range(0, sv_filenames.shape[1]):
+            for ii in range(0, num_cols):            
+                iSurfacePlot(diffgroups, 'papy_output/plot-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), ii+1, jj+1, kk+1, sampleSizes, effectSizes,numberreps)
+                iSurfacePlot(linearregression, 'papy_output/plot-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), ii+1, jj+1, kk+1, sampleSizes, effectSizes,numberreps)
+    #debug
+    print diffgroups.shape
+    
+    #save and plot surface of mean of each variable 
+    for jj in range(0, sv_filenames.shape[0]):
+        for kk in range(0, sv_filenames.shape[1]):
+            temp_diffgroups_array=[]
+            temp_linearregression_array=[]
+            mean_diffgroups_array=[]
+            mean_linearregression_array=[]    
+            for ii in range(0, num_cols):
+                temp_diffgroups_array.append(diffgroups[ii][jj][kk])
+                temp_linearregression_array.append(linearregression[ii][jj][kk])
+            temp_diffgroups_array=np.array(temp_diffgroups_array)
+            temp_linearregression_array=np.array(temp_linearregression_array)
+            
+            mean_diffgroups_array=np.mean(temp_diffgroups_array,axis=0)
+            mean_linearregression_array=np.mean(temp_linearregression_array, axis=0)
+            
+            file_handle = file('papy_output/mean-diffgroups-%s.csv'%(sv_filenames[jj][kk]), 'a')
+            np.savetxt(file_handle, mean_diffgroups_array, delimiter=",", fmt='%.5f')
+            file_handle.close()
+            file_handle = file('papy_output/mean-linearregression-%s.csv'%(sv_filenames[jj][kk]), 'a')
+            np.savetxt(file_handle, mean_linearregression_array, delimiter=",", fmt='%.5f')
+            file_handle.close()
+            
+            for ii in range(0,3):
+                mean_diffgroups_array=np.expand_dims(mean_diffgroups_array, axis=0)
+                mean_linearregression_array=np.expand_dims(mean_linearregression_array, axis=0)
+            iSurfacePlot(mean_diffgroups_array, 'papy_output/plot-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]), 1, 1, 1, sampleSizes, effectSizes,numberreps)
+            iSurfacePlot(mean_linearregression_array, 'papy_output/plot-mean-linearregression-%s.html'%(sv_filenames[jj][kk]), 1, 1, 1, sampleSizes, effectSizes,numberreps)
+            
+                                                      
 if __name__=="__main__":
     #try:
         main(sys.argv[1], sys.argv[2])
