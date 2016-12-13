@@ -10,9 +10,11 @@ import numpy as np
 import scipy.stats as scistats
 import statsmodels.formula.api as sm                    #for linear regression
 import matplotlib.pyplot as plt
+import shutil                                           #for creating zip files
 from math import fabs,floor,ceil,log,exp
 from datetime import datetime
 from joblib import Parallel, delayed                    #for Parallel computing
+
 # For 3d plots. This import is necessary to have 3D plotting below
 #from mpl_toolkits.mplot3d import Axes3D
 # for saving the plot to pdf file 
@@ -32,8 +34,26 @@ def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsi
     #generate a 2D grid
     X, Y = np.meshgrid(sizeeff, samplsizes)
     
+    #debug
+    ## print svfilename
+    ## if 'mean' in svfilename:
+        ## print 'plot mean'
     if metric == 1:
-        zaxis_title = 'True Positive Rate'
+        if not 'mean' in svfilename:
+            zaxis_title = 'True Positive Rate'
+        else:
+            if 'tp' in svfilename:
+                ## print 'plot tp mean'
+                zaxis_title = 'True Positive Rate'
+            if 'fp' in svfilename:
+                ## print 'plot fp mean'
+                zaxis_title = 'False Positive Rate'
+            if 'tn' in svfilename:
+                ## print 'plot tn mean'
+                zaxis_title = 'True Negative Rate'
+            if 'fn' in svfilename:
+                ## print 'plot fn mean'
+                zaxis_title = 'False Negative Rate'
     elif metric == 2:
         zaxis_title = 'False Positive Rate'
     elif metric == 3:
@@ -75,6 +95,24 @@ def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsi
     py.offline.plot(fig, filename=svfilename, auto_open=False)
 ##=======End of interactive SurfacePlot============
 
+##====== Beginning of scatter plot for slices of surface plots===============
+def iSlicesPlot(X, Y, Error_y, svfilename):
+    import plotly as py
+    import plotly.graph_objs as go
+    
+    traces = []
+    for ii in range(0, len(Y)):
+        trace_tmp = go.Scatter(x=X,y=Y[ii], error_y=dict(
+                type='data',
+                array=Error_y[ii],
+                visible=True
+            ))
+        traces.append(trace_tmp)
+        
+    data=go.Data(traces)
+    
+    py.offline.plot(data, filename = svfilename, auto_open=False)
+    
 ''' 
 ## This Surface plot method is scrapped.
 ##=======Beginning of SurfacePlot=========================
@@ -470,7 +508,7 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                     storeVar = np.append(storeVar, np.zeros((4,1)), axis =1)                
                 elif (nEffSizes > 1 or nSampSizes > 1):
                     storeVar = np.append(storeVar, np.zeros((4,1, nEffSizes, nSampSizes)), axis=1)                
-                storeVar[2][i] = byStruct[stats[i]]
+                storeVar[3][i] = byStruct[stats[i]]
                 
         output.append(storeVar)
         ## storeVar1 = np.expand_dims(storeVar, axis=0)
@@ -582,6 +620,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
     elif (nEffSizes > 1 or nSampSizes > 1):
         storeVar = np.zeros((4,nRepeats, nEffSizes, nSampSizes))                            
     #define uncStruct -- structual data
+    #STP-- State for True Positive prediction; SFP -- State for False Positive prediction
     uncStruct = {'TP':np.zeros((nEffSizes, nSampSizes)),'FP':np.zeros((nEffSizes, nSampSizes)),'TN':np.zeros((nEffSizes, nSampSizes)),\
                  'FN':np.zeros((nEffSizes, nSampSizes)),'FD':np.zeros((nEffSizes, nSampSizes)),'STP':np.zeros((nEffSizes, nSampSizes)),\
                  'SFP':np.zeros((nEffSizes, nSampSizes)),'STN':np.zeros((nEffSizes, nSampSizes)),'SFN':np.zeros((nEffSizes, nSampSizes)),\
@@ -816,7 +855,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                     storeVar = np.append(storeVar, np.zeros((4,1)), axis =1)                
                 elif (nEffSizes > 1 or nSampSizes > 1):
                     storeVar = np.append(storeVar, np.zeros((4,1, nEffSizes, nSampSizes)), axis=1)                
-                storeVar[2][i] = byStruct[stats[i]]
+                storeVar[3][i] = byStruct[stats[i]]
             
         output.append(storeVar)
     print '| \n'
@@ -1084,6 +1123,11 @@ def main(argv1, argv2):
         t_end = datetime.now()
         print 'Time collapsed: ' + str(t_end-t_start)
 
+    #diffgroups has dimension of (number of variables, 4, 10, effectsize, samplesize);
+    #number of variables is the input number of columns from the input dataset.
+    #4-- 4 correction options
+    #10--10 metric as "TP","FP","TN","FN","FD","STP","SFP","STN","SFN","SFD" 
+
     '''
     Using the SurfacePlot function to visualize results 
     SurfacePlot(output, variable,metric,correction, sizeeff,samplsizes,nreps)
@@ -1100,6 +1144,7 @@ def main(argv1, argv2):
     1 - No correction
     2 - Bonferroni
     3 - Benjamini-Hochberg
+    4 - Benjamini-Yekutieli
     The example line below will open the False Negative Rate surface for
     variable number 2 without multiple testing correction
     '''
@@ -1110,8 +1155,8 @@ def main(argv1, argv2):
         os.makedirs('papy_output')
     
     #file names matrix
-    sv_filenames = np.array([['tpn', 'tpb', 'tpbh'],['fpn', 'fpb', 'fpbh'], \
-                             ['tnn', 'tnb', 'tnbh'],['fnn', 'fnb', 'fnbh']])    
+    sv_filenames = np.array([['tpn', 'tpb', 'tpbh', 'tpby'],['fpn', 'fpb', 'fpbh', 'fpby'], \
+                             ['tnn', 'tnb', 'tnbh', 'tnby'],['fnn', 'fnb', 'fnbh', 'fnby']])    
     #save the effect sizes and sample sizes
     file_handle = file('papy_output/effect_n_sample_sizes.txt', 'a')
     np.savetxt(file_handle, np.array(['effect sizes']), fmt='%s')
@@ -1139,13 +1184,26 @@ def main(argv1, argv2):
     #plot all surface.
     for jj in range(0, sv_filenames.shape[0]):
         for kk in range(0, sv_filenames.shape[1]):
-            for ii in range(0, num_cols):            
+            for ii in range(0, num_cols):
+                #print ii, jj, kk         
                 iSurfacePlot(diffgroups, 'papy_output/plot-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), ii+1, jj+1, kk+1, sampleSizes, effectSizes,numberreps)
                 iSurfacePlot(linearregression, 'papy_output/plot-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), ii+1, jj+1, kk+1, sampleSizes, effectSizes,numberreps)
-    #debug
-    print diffgroups.shape
+                #plotting slices of variables surface plots based on sample size
+                Y_eff_diffgroups=[]
+                Y_eff_std_diffgroups=[]
+                for ll in range(0,len(sampleSizes[0])):
+                    Y_eff_diffgroups.append(diffgroups[ii][kk][jj][ll])
+                    Y_eff_std_diffgroups.append([0])
+                iSlicesPlot(sampleSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, 'papy_output/plot-slice-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]))
+
     
-    #save and plot surface of mean of each variable 
+    
+    #debug
+    #print diffgroups.shape
+    
+    #save and plot surface of mean of each variable; 
+    #sv_filenames.shape[0] is the dimension of metric options; 
+    #sv_filenames.shape[1] is the dimension of correction options
     for jj in range(0, sv_filenames.shape[0]):
         for kk in range(0, sv_filenames.shape[1]):
             temp_diffgroups_array=[]
@@ -1160,6 +1218,10 @@ def main(argv1, argv2):
             
             mean_diffgroups_array=np.mean(temp_diffgroups_array,axis=0)
             mean_linearregression_array=np.mean(temp_linearregression_array, axis=0)
+            #for calculating standard deviation
+            std_diffgroups_array=np.std(temp_diffgroups_array,axis=0)
+            std_linearregression_array=np.std(temp_linearregression_array, axis=0)
+            
             
             file_handle = file('papy_output/mean-diffgroups-%s.csv'%(sv_filenames[jj][kk]), 'a')
             np.savetxt(file_handle, mean_diffgroups_array, delimiter=",", fmt='%.5f')
@@ -1168,12 +1230,26 @@ def main(argv1, argv2):
             np.savetxt(file_handle, mean_linearregression_array, delimiter=",", fmt='%.5f')
             file_handle.close()
             
+            #plotting slices of mean surface plots based on sample size
+            Y_eff_mean_diffgroups=[]
+            Y_eff_std_diffgroups=[]
+            for ii in range(0,len(sampleSizes[0])):
+                Y_eff_mean_diffgroups.append(mean_diffgroups_array[ii])
+                Y_eff_std_diffgroups.append(std_diffgroups_array[ii])                                
+            iSlicesPlot(sampleSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, 'papy_output/plot-slice-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]))
+            
+            #plotting surface plots
             for ii in range(0,3):
                 mean_diffgroups_array=np.expand_dims(mean_diffgroups_array, axis=0)
                 mean_linearregression_array=np.expand_dims(mean_linearregression_array, axis=0)
             iSurfacePlot(mean_diffgroups_array, 'papy_output/plot-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]), 1, 1, 1, sampleSizes, effectSizes,numberreps)
             iSurfacePlot(mean_linearregression_array, 'papy_output/plot-mean-linearregression-%s.html'%(sv_filenames[jj][kk]), 1, 1, 1, sampleSizes, effectSizes,numberreps)
             
+            #create a zip file on the output folder
+            shutil.make_archive('papy_output_zip', 'zip', 'papy_output')
+            
+            #delete the papy_output folder
+            shutil.rmtree('papy_output')
                                                       
 if __name__=="__main__":
     #try:
