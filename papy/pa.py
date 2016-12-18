@@ -75,7 +75,7 @@ def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsi
         scene=go.Scene(
             xaxis=dict(
                 title='Sample Sizes',
-                range=[0,np.max(X)+0.1],
+                range=[0,np.max(X)+0.1]
                 ## titlefont=dict(
                     ## family='Courier New, monospace',
                 ## )
@@ -96,7 +96,7 @@ def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsi
 ##=======End of interactive SurfacePlot============
 
 ##====== Beginning of scatter plot for slices of surface plots===============
-def iSlicesPlot(X, Y, Error_y, svfilename):
+def iSlicesPlot(X, Y, Error_y, svfilename, plot_title, x_caption, y_caption, trace_label, trace_num):
     import plotly as py
     import plotly.graph_objs as go
     
@@ -106,12 +106,76 @@ def iSlicesPlot(X, Y, Error_y, svfilename):
                 type='data',
                 array=Error_y[ii],
                 visible=True
-            ))
+                ),
+                name=trace_label+str(trace_num[0][ii])
+            )
         traces.append(trace_tmp)
         
     data=go.Data(traces)
     
-    py.offline.plot(data, filename = svfilename, auto_open=False)
+    ##define other features of plots
+    
+    ##dictionary of y_caption
+    if y_caption == 'tpn':
+        y_caption = 'True Positive Rate \r\n (no correction)'
+    if y_caption == 'tpb':
+        y_caption = 'True Positive Rate \r\n (Bonferroni correction)'
+    if y_caption == 'tpbn':
+        y_caption = 'True Positive Rate \r\n (Benjamini-Hochberg correction)'
+    if y_caption == 'tpby':
+        y_caption = 'True Positive Rate \r\n (Benjamini-Yekutieli correction)'
+    
+    if y_caption == 'fpn':
+        y_caption = 'False Positive Rate \r\n (no correction)'
+    if y_caption == 'fpb':
+        y_caption = 'False Positive Rate \r\n (Bonferroni correction)'
+    if y_caption == 'fpbn':
+        y_caption = 'False Positive Rate \r\n (Benjamini-Hochberg correction)'
+    if y_caption == 'fpby':
+        y_caption = 'False Positive Rate \r\n (Benjamini-Yekutieli correction)'    
+    
+    
+    if y_caption == 'tnn':
+        y_caption = 'True Negative Rate \r\n (no correction)'
+    if y_caption == 'tnb':
+        y_caption = 'True Negative Rate \r\n (Bonferroni correction)'
+    if y_caption == 'tnbn':
+        y_caption = 'True Negative Rate \r\n (Benjamini-Hochberg correction)'
+    if y_caption == 'tnby':
+        y_caption = 'True Negative Rate \r\n (Benjamini-Yekutieli correction)'    
+    
+    
+    if y_caption == 'fnn':
+        y_caption = 'False Negative Rate \r\n (no correction)'
+    if y_caption == 'fnb':
+        y_caption = 'False Negative Rate \r\n (Bonferroni correction)'
+    if y_caption == 'fnbn':
+        y_caption = 'False Negative Rate \r\n (Benjamini-Hochberg correction)'
+    if y_caption == 'fnby':
+        y_caption = 'False Negative Rate \r\n (Benjamini-Yekutieli correction)'    
+
+
+    layout = go.Layout(
+        title='Surface plot slice',
+        xaxis=dict(
+            title=x_caption,
+            titlefont=dict(
+                family='Courier New, monospace',
+                size=18,
+                color='#7f7f7f'
+            )
+        ),
+        yaxis=dict(
+            title=y_caption,
+            titlefont=dict(
+                family='Courier New, monospace',
+                size=18,
+                color='#7f7f7f'
+            )
+        )
+)
+    fig = go.Figure(data=data, layout=layout)
+    py.offline.plot(fig, filename = svfilename, auto_open=False)
     
 ''' 
 ## This Surface plot method is scrapped.
@@ -1189,12 +1253,48 @@ def main(argv1, argv2):
                 iSurfacePlot(diffgroups, 'papy_output/plot-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), ii+1, jj+1, kk+1, sampleSizes, effectSizes,numberreps)
                 iSurfacePlot(linearregression, 'papy_output/plot-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), ii+1, jj+1, kk+1, sampleSizes, effectSizes,numberreps)
                 #plotting slices of variables surface plots based on sample size
+                #for diffgroups
+                Y_eff_diffgroups=[]
+                Y_eff_std_diffgroups=[]
+                for ll in range(0,len(effectSizes[0])):
+                    Y_eff_diffgroups.append(diffgroups[ii][kk][jj][ll,:])
+                    Y_eff_std_diffgroups.append([0])
+                iSlicesPlot(sampleSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, \
+                            'papy_output/plot-slice-samp-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            'plot-slice-variable%d-diffgroups-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+                #for linearregression            
+                Y_eff_linearregression=[]
+                Y_eff_std_linearregression=[]
+                for ll in range(0,len(effectSizes[0])):
+                    Y_eff_linearregression.append(linearregression[ii][kk][jj][ll,:])
+                    Y_eff_std_linearregression.append([0])
+                iSlicesPlot(sampleSizes[0], Y_eff_linearregression, Y_eff_std_linearregression, \
+                            'papy_output/plot-slice-samp-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            'plot-slice-variable%d-linearregression-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+                            
+                #plotting slices of variables surface plots based on effect size
+                #for diffgroups
                 Y_eff_diffgroups=[]
                 Y_eff_std_diffgroups=[]
                 for ll in range(0,len(sampleSizes[0])):
-                    Y_eff_diffgroups.append(diffgroups[ii][kk][jj][ll])
+                    Y_eff_diffgroups.append(diffgroups[ii][kk][jj][:,ll])
                     Y_eff_std_diffgroups.append([0])
-                iSlicesPlot(sampleSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, 'papy_output/plot-slice-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]))
+                iSlicesPlot(effectSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, \
+                            'papy_output/plot-slice-eff-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            'plot-slice-variable%d-diffgroups-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
+                #for linearregression            
+                Y_eff_linearregression=[]
+                Y_eff_std_linearregression=[]
+                for ll in range(0,len(sampleSizes[0])):
+                    Y_eff_linearregression.append(linearregression[ii][kk][jj][:,ll])
+                    Y_eff_std_linearregression.append([0])
+                iSlicesPlot(effectSizes[0], Y_eff_linearregression, Y_eff_std_linearregression, \
+                            'papy_output/plot-slice-eff-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            'plot-slice-variable%d-linearregression-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
 
     
     
@@ -1233,10 +1333,44 @@ def main(argv1, argv2):
             #plotting slices of mean surface plots based on sample size
             Y_eff_mean_diffgroups=[]
             Y_eff_std_diffgroups=[]
+            for ii in range(0,len(effectSizes[0])):
+                Y_eff_mean_diffgroups.append(mean_diffgroups_array[ii,:])
+                Y_eff_std_diffgroups.append(std_diffgroups_array[ii,:])                                
+            iSlicesPlot(sampleSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, \
+                        'papy_output/plot-slice-samp-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]),\
+                        'plot-slice-mean-diffgroups-%s'%(sv_filenames[jj][kk]), \
+                        'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+                        
+            Y_eff_mean_linearregression=[]
+            Y_eff_std_linearregression=[]
+            for ii in range(0,len(effectSizes[0])):
+                Y_eff_mean_linearregression.append(mean_linearregression_array[ii,:])
+                Y_eff_std_linearregression.append(std_linearregression_array[ii,:])                                
+            iSlicesPlot(sampleSizes[0], Y_eff_mean_linearregression, Y_eff_std_linearregression, \
+                        'papy_output/plot-slice-samp-mean-linearregression-%s.html'%(sv_filenames[jj][kk]),\
+                        'plot-slice-mean-linearregression-%s'%(sv_filenames[jj][kk]), \
+                        'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+            
+            #plotting slices of mean surface plots based on effect size
+            Y_eff_mean_diffgroups=[]
+            Y_eff_std_diffgroups=[]
             for ii in range(0,len(sampleSizes[0])):
-                Y_eff_mean_diffgroups.append(mean_diffgroups_array[ii])
-                Y_eff_std_diffgroups.append(std_diffgroups_array[ii])                                
-            iSlicesPlot(sampleSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, 'papy_output/plot-slice-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]))
+                Y_eff_mean_diffgroups.append(mean_diffgroups_array[:,ii])
+                Y_eff_std_diffgroups.append(std_diffgroups_array[:,ii])                                
+            iSlicesPlot(effectSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, \
+                        'papy_output/plot-slice-eff-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]),\
+                        'plot-slice-mean-diffgroups-%s'%(sv_filenames[jj][kk]), \
+                        'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
+                        
+            Y_eff_mean_linearregression=[]
+            Y_eff_std_linearregression=[]
+            for ii in range(0,len(sampleSizes[0])):
+                Y_eff_mean_linearregression.append(mean_linearregression_array[:,ii])
+                Y_eff_std_linearregression.append(std_linearregression_array[:,ii])                                
+            iSlicesPlot(effectSizes[0], Y_eff_mean_linearregression, Y_eff_std_linearregression, \
+                        'papy_output/plot-slice-eff-mean-linearregression-%s.html'%(sv_filenames[jj][kk]),\
+                        'plot-slice-mean-linearregression-%s'%(sv_filenames[jj][kk]), \
+                        'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
             
             #plotting surface plots
             for ii in range(0,3):
@@ -1245,11 +1379,11 @@ def main(argv1, argv2):
             iSurfacePlot(mean_diffgroups_array, 'papy_output/plot-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]), 1, 1, 1, sampleSizes, effectSizes,numberreps)
             iSurfacePlot(mean_linearregression_array, 'papy_output/plot-mean-linearregression-%s.html'%(sv_filenames[jj][kk]), 1, 1, 1, sampleSizes, effectSizes,numberreps)
             
-            #create a zip file on the output folder
-            shutil.make_archive('papy_output_zip', 'zip', 'papy_output')
+    #create a zip file on the output folder
+    shutil.make_archive('papy_output_zip', 'zip', 'papy_output')
             
-            #delete the papy_output folder
-            shutil.rmtree('papy_output')
+    #delete the papy_output folder
+    shutil.rmtree('papy_output')
                                                       
 if __name__=="__main__":
     #try:
