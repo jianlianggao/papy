@@ -14,6 +14,7 @@ import shutil                                           #for creating zip files
 from math import fabs,floor,ceil,log,exp
 from datetime import datetime
 from joblib import Parallel, delayed                    #for Parallel computing
+from statsmodels import robust                          #for work out median absolute deviation
 
 # For 3d plots. This import is necessary to have 3D plotting below
 #from mpl_toolkits.mplot3d import Axes3D
@@ -60,7 +61,11 @@ def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsi
         zaxis_title = 'True Negative Rate'
     elif metric == 4:
         zaxis_title = 'False Negative Rate'
-        
+    camera=dict(
+                up=dict(x=0, y=0, z=1),
+                center=dict(x=0, y=0, z=0),
+                eye=dict(x=2, y=2, z=0.1)
+            )    
     layout = go.Layout(
         title='Statistical Power Analysis Resutls',
         autosize=True,
@@ -82,16 +87,23 @@ def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsi
             ),
             yaxis=dict(
                 title='Effect Sizes',
+                tickmode='linear',
+                tick0=0,
+                dtick=0.1,
                 range=[0,np.max(Y)]
             ),
             zaxis=dict(
                 title=zaxis_title,
-                range=[-0.1,1.2]
+                tickmode='linear',
+                tick0=0,
+                dtick=0.1,
+                range=[0,1.0]
             )
         )
     )
     data=[go.Surface(x=X,y=Y,z=MUtot)]
     fig = go.Figure(data=data, layout=layout)
+    fig['layout'].update(scene=dict(camera=camera))
     py.offline.plot(fig, filename=svfilename, auto_open=False)
 ##=======End of interactive SurfacePlot============
 
@@ -117,46 +129,59 @@ def iSlicesPlot(X, Y, Error_y, svfilename, plot_title, x_caption, y_caption, tra
     
     ##dictionary of y_caption
     if y_caption == 'tpn':
-        y_caption = 'True Positive Rate \r\n (no correction)'
+        y_caption = 'True Positive Rate'
+        plot_title = plot_title+'-(no correction)'
     if y_caption == 'tpb':
-        y_caption = 'True Positive Rate \r\n (Bonferroni correction)'
-    if y_caption == 'tpbn':
-        y_caption = 'True Positive Rate \r\n (Benjamini-Hochberg correction)'
+        y_caption = 'True Positive Rate'
+        plot_title = plot_title+'-(Bonferroni correction)'
+    if y_caption == 'tpbh':
+        y_caption = 'True Positive Rate'
+        plot_title = plot_title+'-(Benjamini-Hochberg correction)'
     if y_caption == 'tpby':
-        y_caption = 'True Positive Rate \r\n (Benjamini-Yekutieli correction)'
+        y_caption = 'True Positive Rate'
+        plot_title = plot_title+'-(Benjamini-Yekutieli correction)'
     
     if y_caption == 'fpn':
-        y_caption = 'False Positive Rate \r\n (no correction)'
+        y_caption = 'False Positive Rate'
+        plot_title = plot_title+'-(no correction)'
     if y_caption == 'fpb':
-        y_caption = 'False Positive Rate \r\n (Bonferroni correction)'
-    if y_caption == 'fpbn':
-        y_caption = 'False Positive Rate \r\n (Benjamini-Hochberg correction)'
+        y_caption = 'False Positive Rate'
+        plot_title = plot_title+'-(Bonferroni correction)'
+    if y_caption == 'fpbh':
+        y_caption = 'False Positive Rate'
+        plot_title = plot_title+'-(Benjamini-Hochberg correction)'
     if y_caption == 'fpby':
-        y_caption = 'False Positive Rate \r\n (Benjamini-Yekutieli correction)'    
-    
+        y_caption = 'False Positive Rate'
+        plot_title = plot_title+'-(Benjamini-Yekutieli correction)'    
     
     if y_caption == 'tnn':
-        y_caption = 'True Negative Rate \r\n (no correction)'
+        y_caption = 'True Negative Rate'
+        plot_title = plot_title+'-(no correction)'
     if y_caption == 'tnb':
-        y_caption = 'True Negative Rate \r\n (Bonferroni correction)'
-    if y_caption == 'tnbn':
-        y_caption = 'True Negative Rate \r\n (Benjamini-Hochberg correction)'
+        y_caption = 'True Negative Rate'
+        plot_title = plot_title+'-(Bonferroni correction)'
+    if y_caption == 'tnbh':
+        y_caption = 'True Negative Rate'
+        plot_title = plot_title+'-(Benjamini-Hochberg correction)'
     if y_caption == 'tnby':
-        y_caption = 'True Negative Rate \r\n (Benjamini-Yekutieli correction)'    
-    
+        y_caption = 'True Negative Rate'
+        plot_title = plot_title+'-(Benjamini-Yekutieli correction)'
     
     if y_caption == 'fnn':
-        y_caption = 'False Negative Rate \r\n (no correction)'
+        y_caption = 'False Negative Rate'
+        plot_title = plot_title+'-(no correction)'
     if y_caption == 'fnb':
-        y_caption = 'False Negative Rate \r\n (Bonferroni correction)'
-    if y_caption == 'fnbn':
-        y_caption = 'False Negative Rate \r\n (Benjamini-Hochberg correction)'
+        y_caption = 'False Negative Rate'
+        plot_title = plot_title+'-(Bonferroni correction)'
+    if y_caption == 'fnbh':
+        y_caption = 'False Negative Rate'
+        plot_title = plot_title+'-(Benjamini-Hochberg correction)'
     if y_caption == 'fnby':
-        y_caption = 'False Negative Rate \r\n (Benjamini-Yekutieli correction)'    
-
+        y_caption = 'False Negative Rate'
+        plot_title = plot_title+'-(Benjamini-Yekutieli correction)'
 
     layout = go.Layout(
-        title='Surface plot slice',
+        title= plot_title,
         xaxis=dict(
             title=x_caption,
             titlefont=dict(
@@ -176,6 +201,66 @@ def iSlicesPlot(X, Y, Error_y, svfilename, plot_title, x_caption, y_caption, tra
 )
     fig = go.Figure(data=data, layout=layout)
     py.offline.plot(fig, filename = svfilename, auto_open=False)
+
+def iSurfacePlotTPR(output, svfilename, correction, sizeeff,samplsizes,nreps):
+    import plotly as py
+    import plotly.graph_objs as go
+    MUtot = output
+    NS, NSE = MUtot.shape
+        
+    ##plot
+    #generate a 2D grid
+    X, Y = np.meshgrid(sizeeff, samplsizes)
+    
+    #define z axis title
+    zaxis_title = 'Power Rate'
+    
+    camera=dict(
+                up=dict(x=0, y=0, z=1),
+                center=dict(x=0, y=0, z=0),
+                eye=dict(x=2, y=2, z=0.1)
+            )    
+    layout = go.Layout(
+        title='Power Rate (True Positive)-%s, %d Repeats'%(correction, nreps),
+        autosize=True,
+        width=1024,
+        height=768,
+        margin=go.Margin(
+            l=80,
+            r=40,
+            b=100,
+            t=60
+        ),
+        scene=go.Scene(
+            xaxis=dict(
+                title='Sample Sizes',
+                range=[0,np.max(X)+0.1]
+                ## titlefont=dict(
+                    ## family='Courier New, monospace',
+                ## )
+            ),
+            yaxis=dict(
+                title='Effect Sizes',
+                tickmode='linear',
+                tick0=0,
+                dtick=0.1,
+                range=[0,np.max(Y)]
+            ),
+            zaxis=dict(
+                title=zaxis_title,
+                tickmode='linear',
+                tick0=0,
+                dtick=0.1,
+                range=[0,1.0]
+            )
+        )
+    )
+    data=[go.Surface(x=X,y=Y,z=MUtot)]
+    fig = go.Figure(data=data, layout=layout)
+    fig['layout'].update(scene=dict(camera=camera))
+    py.offline.plot(fig, filename=svfilename, auto_open=False)
+##=======End of interactive SurfacePlot============
+
     
 ''' 
 ## This Surface plot method is scrapped.
@@ -312,22 +397,80 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     ## Initialize the output structures
     ##output2 = np.zeros((cores,1, 4, nRepeats, nEffSizes,nSampSizes)) 
     output2=[]
-    ## for ii in range(cores):
-        ## output2.append([])  
+    
+    #define an array for storing the results in each step of repeat for all variables
+    #with all effect sizes and sample sizes; 
+    output_allsteps_tmp=[]
     
     output2 = Parallel(n_jobs=cores)(delayed(f_multiproc1)(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg,ii) for ii in range(cores))            #n_jobs=-1 means using all CPUs or any other number>1 to specify the number of CPUs to use
     ## for ii in range(numVars):       # non parallelized loop
         ## f_multiproc(ii)
     ##pass the results to output
-    output = np.array([])
-    output = np.array(output2[0])
+    output = []
+    output.append(output2[0][0])
+    output.append(output2[0][1])
+    
+    ##pass Power TPR results to output variables
+    output_uncTP = []
+    output_bonfTP = []
+    output_bhTP = []
+    output_byTP = []
+    
+    output_uncTP = np.array(output2[0][2])
+    output_bonfTP = np.array(output2[0][3])
+    output_bhTP = np.array(output2[0][4])
+    output_byTP = np.array(output2[0][5])
+    
     for ii in range(1, cores):
-        #debug
-        #print (np.array(output2[ii])).shape
-        output = np.append(output, output2[ii],axis=0)
+        output.append(output2[ii][0])
+        output.append(output2[ii][1])
+        
+        output_uncTP = np.append(output_uncTP, output2[ii][2],axis=2)
+        output_bonfTP = np.append(output_bonfTP, output2[ii][3],axis=2)
+        output_bhTP = np.append(output_bhTP, output2[ii][4],axis=2)
+        output_byTP = np.append(output_byTP, output2[ii][5],axis=2)
+    
+    output = np.array(output)    
+    ##for the mean proportion of number of variables achieve the power; and the std
+    output_uncTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    output_bonfTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    output_bhTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    output_byTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    
+    output_uncTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    output_bonfTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    output_bhTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    output_byTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    
+    for currEff in range(0, nEffSizes):
+        for currSamp in range(0, nSampSizes):
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_uncTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
+            output_uncTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_uncTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
+            
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_bonfTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
+            output_bonfTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_bonfTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
+            
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_bhTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
+            output_bhTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_bhTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
+            
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_byTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)            
+            output_byTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_byTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
           
     try:
-        return output
+        return output, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
+                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad
     except:
         print 'error occurs when returning output'
 
@@ -337,6 +480,15 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
     #re-check numVars
     numVars = Samples_seg[currCore].shape[1]
     
+    #for storing all results in all repeated steps with all effect sizes and sample
+    #sizes for Power (TP) in current samples_seg
+    output_all_uncTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    output_all_bonfTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    output_all_bhTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    output_all_byTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    
+    #for storing results of all metric and correction options under the combination
+    #of effect size and sample size for all variables
     output = []
     
     if (nEffSizes == 1 and nSampSizes == 1):
@@ -516,6 +668,13 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                         multiplerepeats.BenjYek['FD'][currRepeat] = byFDTot
                     except IndexError:
                         multiplerepeats.BenjYek['FD'] = np.append(multiplerepeats.BenjYek['FD'], byFDTot)
+                        
+                    #storing each result
+                    output_all_uncTP_tmp[currEff][currSampSize][currVar][currRepeat]=uncTPTot
+                    output_all_bonfTP_tmp[currEff][currSampSize][currVar][currRepeat]=bonfTPTot
+                    output_all_bhTP_tmp[currEff][currSampSize][currVar][currRepeat]=bhTPTot
+                    output_all_byTP_tmp[currEff][currSampSize][currVar][currRepeat]=byTPTot
+                    
                 ##end of for currRepeat in range(0, nRepeats):
                     
                     #get multiplerepeats.Bonferroni keys/fields
@@ -584,6 +743,10 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                   
     #output2[currVar].append(output)        
     print '|| \n'
+    output.append(output_all_uncTP_tmp)
+    output.append(output_all_bonfTP_tmp)
+    output.append(output_all_bhTP_tmp)
+    output.append(output_all_byTP_tmp)
     try:
         return output
     except:
@@ -648,25 +811,92 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
         cores = 1
     else:
         cores = multiprocessing.cpu_count()
-        
+    ## cores = 1
+    print cores    
     Samples_seg = _chunkMatrix(Samples, cores)
     correlationMat_seg = _chunkMatrix(correlationMat, cores)
     
     output2=[]
-    ## for ii in range(cores):
-        ## output2.append([])  
-        
+    
+    #define an array for storing the results in each step of repeat for all variables
+    #with all effect sizes and sample sizes; 
+    output_allsteps_tmp=[]
+    
     output2 = Parallel(n_jobs=cores)(delayed(f_multiproc)(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, ii) for ii in range(cores))            #n_jobs=-1 means using all CPUs or any other number>1 to specify the number of CPUs to use
     ## for ii in range(numVars):
             ## f_multiproc(ii)
     ##pass the results to output
-    output = np.array([])
-    output = np.array(output2[0])
+    output = []
+    output.append(output2[0][0])
+    output.append(output2[0][1])
+    
+    ##pass Power TPR results to output variables
+    output_uncTP = []
+    output_bonfTP = []
+    output_bhTP = []
+    output_byTP = []
+    
+    output_uncTP = np.array(output2[0][2])
+    output_bonfTP = np.array(output2[0][3])
+    output_bhTP = np.array(output2[0][4])
+    output_byTP = np.array(output2[0][5])
+    
     for ii in range(1, cores):
-        output = np.append(output, output2[ii],axis=0)
+        output.append(output2[ii][0])
+        output.append(output2[ii][1])
         
+        output_uncTP = np.append(output_uncTP, output2[ii][2],axis=2)
+        output_bonfTP = np.append(output_bonfTP, output2[ii][3],axis=2)
+        output_bhTP = np.append(output_bhTP, output2[ii][4],axis=2)
+        output_byTP = np.append(output_byTP, output2[ii][5],axis=2)
+    
+    output = np.array(output)    
+    ##for the mean proportion of number of variables achieve the power; and the std
+    output_uncTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    output_bonfTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    output_bhTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    output_byTP_ratio_median = np.zeros((nEffSizes, nSampSizes))
+    
+    output_uncTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    output_bonfTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    output_bhTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    output_byTP_ratio_mad = np.zeros((nEffSizes, nSampSizes))
+    
+    for currEff in range(0, nEffSizes):
+        for currSamp in range(0, nSampSizes):
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_uncTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
+            output_uncTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_uncTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
+            
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_bonfTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
+            output_bonfTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_bonfTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
+            
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_bhTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
+            output_bhTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_bhTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
+            
+            tmp_median_array = np.zeros(nRepeats)
+            for currStep in range(0, nRepeats):
+                tmp_median_array[currStep] = (sum(1 for x in output_byTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)            
+            output_byTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
+            output_byTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
+            
+            #output_uncTP_ratio_mad[currEff][currSamp] = np.std(np.mean(output_uncTP[currEff][currSamp], axis=0))
+            #output_bonfTP_ratio_std[currEff][currSamp] = np.std(np.mean(output_bonfTP[currEff][currSamp], axis=0))
+            #output_bhTP_ratio_std[currEff][currSamp] = np.std(np.mean(output_bhTP[currEff][currSamp], axis=0))
+            #output_byTP_ratio_std[currEff][currSamp] = np.std(np.mean(output_byTP[currEff][currSamp], axis=0))
+            
     try:
-        return output
+        return output, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
+                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad
+            
     except:
         print 'error occurs when returning output'
         
@@ -677,6 +907,14 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
     #re-check numVars
     numVars = Samples_seg[currCore].shape[1]
     
+    #for storing all results in all repeated steps with all effect sizes and sample
+    #sizes for Power (TP) in current samples_seg
+    output_all_uncTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    output_all_bonfTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    output_all_bhTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    output_all_byTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
+    
+    #output = {'EACHSTEP':np.zeros((numVars, nEffSizes, nSampSizes, nRepeats)), 'ALL':[]}
     output=[]
     
     if (nEffSizes == 1 and nSampSizes == 1):
@@ -720,7 +958,10 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                                                 {'TP':np.zeros(nRepeats),'FP':np.zeros(nRepeats),'TN':np.zeros(nRepeats),'FN':np.zeros(nRepeats),'FD':np.zeros(nRepeats)},\
                                                 {'TP':np.zeros(nRepeats),'FP':np.zeros(nRepeats),'TN':np.zeros(nRepeats),'FN':np.zeros(nRepeats),'FD':np.zeros(nRepeats)},\
                                                 {'TP':np.zeros(nRepeats),'FP':np.zeros(nRepeats),'TN':np.zeros(nRepeats),'FN':np.zeros(nRepeats),'FD':np.zeros(nRepeats)})
-                
+                #for debugging
+                #output multiplerepeats results
+                #file_handle = file('multiplerepeats-bonf.csv', 'a')
+                    
                 for currRepeat in range(0, nRepeats):
                     ## Select a subset of the simulated spectra
                     selectIndex = randperm(len(Samples_seg[currCore]), 2 * sampSizes[0][currSampSize])
@@ -861,6 +1102,21 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                         multiplerepeats.BenjYek['FD'][currRepeat] = byFDTot
                     except IndexError:
                         multiplerepeats.BenjYek['FD'] = np.append(multiplerepeats.BenjYek['FD'], byFDTot)
+                        
+                    #storing each result
+                    #output['EACHSTEP'][currVar][currEff][currSampSize][currRepeat]=bonfFNTot
+                    output_all_uncTP_tmp[currEff][currSampSize][currVar][currRepeat]=uncTPTot
+                    output_all_bonfTP_tmp[currEff][currSampSize][currVar][currRepeat]=bonfTPTot
+                    output_all_bhTP_tmp[currEff][currSampSize][currVar][currRepeat]=bhTPTot
+                    output_all_byTP_tmp[currEff][currSampSize][currVar][currRepeat]=byTPTot    
+                #for debugging
+                #output multiplerepeats results
+                #np.savetxt(file_handle,  multiplerepeats.noCorrection['FN']) 
+                #print currVar, currSampSize, currEff
+                #print multiplerepeats.Bonferroni['TN']   
+                #for debugging
+                #output multiplerepeats results
+                #file_handle.close()        
                 ##end of for currRepeat in range(0, nRepeats):
                     
                     #get multiplerepeats.Bonferroni keys/fields
@@ -923,6 +1179,10 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
             
         output.append(storeVar)
     print '| \n'
+    output.append(output_all_uncTP_tmp)
+    output.append(output_all_bonfTP_tmp)
+    output.append(output_all_bhTP_tmp)
+    output.append(output_all_byTP_tmp)
     try:        
         return output
     except:        
@@ -1107,10 +1367,11 @@ def calcConfMatrixUniv(p, corrVector, signThreshold, corrThresh):
         TNtot = TN/(FP+TN)
     except ZeroDivisionError:
         TNtot = float('NaN')
-    try:
+    try: #TPR - power
         TPtot = TP/(TP+FN)
     except ZeroDivisionError:
-        TPtot = float('NaN')
+        #TPtot = float('NaN')
+        TPtot = 0.0
     try:       
         FPtot = FP/(FP+TN)
     except ZeroDivisionError:
@@ -1175,15 +1436,23 @@ def main(argv1, argv2):
     t_start = datetime.now()
     num_cols = int(argv2)
     if (num_cols > 0):
-        diffgroups = PCalc_2Group(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps);
-        linearregression = PCalc_Continuous(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+        diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
+                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad \
+                = PCalc_2Group(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+        linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
+                output_uncTP_ratio_mad_ln, output_bonfTP_ratio_mad_ln, output_bhTP_ratio_mad_ln, output_byTP_ratio_mad_ln \
+                 = PCalc_Continuous(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
         t_end = datetime.now()
         print 'Time collapsed: ' + str(t_end-t_start)
    
     else:
         t_start = datetime.now()
-        diffgroups = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
-        linearregression = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
+        diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
+                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad \
+                = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
+        linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
+                output_uncTP_ratio_mad_ln, output_bonfTP_ratio_mad_ln, output_bhTP_ratio_mad_ln, output_byTP_ratio_mad_ln \
+                = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
         t_end = datetime.now()
         print 'Time collapsed: ' + str(t_end-t_start)
 
@@ -1245,6 +1514,193 @@ def main(argv1, argv2):
             file_handle.close()
     #iSurfacePlot(diffgroups, 2, 4,2 , sampleSizes, effectSizes,numberreps)
     
+    #plot the surfaces of power rate acrossing the combination of effectSize and SampleSize (classfied)
+    iSurfacePlotTPR(output_uncTP_ratio_median, 'papy_output/plot-power-rate-noCorrection-diffgroups.html',  'no correction', sampleSizes, effectSizes, numberreps)
+    iSurfacePlotTPR(output_bonfTP_ratio_median, 'papy_output/plot-power-rate-bonfCorrection-diffgroups.html',  'Bonferroni correction', sampleSizes, effectSizes, numberreps)
+    iSurfacePlotTPR(output_bhTP_ratio_median, 'papy_output/plot-power-rate-bhCorrection-diffgroups.html',  'Benjamini-Hochberg correction', sampleSizes, effectSizes, numberreps)
+    iSurfacePlotTPR(output_byTP_ratio_median, 'papy_output/plot-power-rate-byCorrection-diffgroups.html',  'Benjamini-Yekutieli correction', sampleSizes, effectSizes, numberreps)
+    
+    #plot the slice of surfaces power rate; x-axis is based on sample size (columns)
+    # 2nd row, mid row, and the 2nd last row
+    slice_rows = np.array([1, int(floor(effectSizes.shape[1]/2)), effectSizes.shape[1]-2]) 
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_uncTP_ratio_median[ll, :])
+        Y_std_temp.append(output_uncTP_ratio_mad[ll, :])
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-noCorrection-diffgroups.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Sample Size', 'tpn', 'Effect Size=', effectSizes[:,slice_rows])
+    
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_bonfTP_ratio_median[ll, :])
+        Y_std_temp.append(output_bonfTP_ratio_mad[ll, :])                        
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bonfCorrection-diffgroups.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Sample Size', 'tpb', 'Effect Size=', effectSizes[:,slice_rows])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_bhTP_ratio_median[ll, :])
+        Y_std_temp.append(output_bhTP_ratio_mad[ll, :])                        
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bhCorrection-diffgroups.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Sample Size', 'tpbh', 'Effect Size=', effectSizes[:,slice_rows])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_byTP_ratio_median[ll, :])
+        Y_std_temp.append(output_byTP_ratio_mad[ll, :])                        
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-byCorrection-diffgroups.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Sample Size', 'tpby', 'Effect Size=', effectSizes[:,slice_rows])
+                            
+    #plot the slice of surfaces power rate; x-axis is based on effect size (rows)
+    # 2nd col, mid col, and the 2nd last col
+    slice_cols = np.array([1, int(floor(sampleSizes.shape[1]/2)), sampleSizes.shape[1]-2])
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_uncTP_ratio_median[:, ll])
+        Y_std_temp.append(output_uncTP_ratio_mad[:, ll])
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-noCorrection-diffgroups-eff.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Effect Size', 'tpn', 'Sample Size=', sampleSizes[:,slice_cols])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_bonfTP_ratio_median[:, ll])
+        Y_std_temp.append(output_bonfTP_ratio_mad[:, ll])                        
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bonfCorrection-diffgroups-eff.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Effect Size', 'tpb', 'Sample Size=', sampleSizes[:,slice_cols])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_bhTP_ratio_median[:, ll])
+        Y_std_temp.append(output_bhTP_ratio_mad[:, ll])                        
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bhCorrection-diffgroups-eff.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Effect Size', 'tpbh', 'Sample Size=', sampleSizes[:,slice_cols])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_byTP_ratio_median[:, ll])
+        Y_std_temp.append(output_byTP_ratio_mad[:, ll])                        
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-byCorrection-diffgroups-eff.html', \
+                            'plot-slice-power-rate-diffgroups', \
+                            'Effect Size', 'tpby', 'Sample Size=', sampleSizes[:,slice_cols])
+    
+    #plot the surfaces of power rate acrossing the combination of effectSize and SampleSize (linear regression)
+    iSurfacePlotTPR(output_uncTP_ratio_median_ln, 'papy_output/plot-power-rate-noCorrection-linearregression.html',  'no correction', sampleSizes, effectSizes, numberreps)
+    iSurfacePlotTPR(output_bonfTP_ratio_median_ln, 'papy_output/plot-power-rate-bonfCorrection-linearregression.html',  'Bonferroni correction', sampleSizes, effectSizes, numberreps)
+    iSurfacePlotTPR(output_bhTP_ratio_median_ln, 'papy_output/plot-power-rate-bhCorrection-linearregression.html',  'Benjamini-Hochberg correction', sampleSizes, effectSizes, numberreps)
+    iSurfacePlotTPR(output_byTP_ratio_median_ln, 'papy_output/plot-power-rate-byCorrection-linearregression.html',  'Benjamini-Yekutieli correction', sampleSizes, effectSizes, numberreps)
+
+    # (linear regression)
+    #plot the slice of surfaces power rate; x-axis is based on sample size (columns)
+    # 2nd row, mid row, and the 2nd last row
+    slice_rows = np.array([1, int(floor(effectSizes.shape[1]/2)), effectSizes.shape[1]-2]) 
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_uncTP_ratio_median_ln[ll, :])
+        Y_std_temp.append(output_uncTP_ratio_mad_ln[ll, :])
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-noCorrection-ln.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Sample Size', 'tpn', 'Effect Size=', effectSizes[:,slice_rows])
+    
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_bonfTP_ratio_median_ln[ll, :])
+        Y_std_temp.append(output_bonfTP_ratio_mad_ln[ll, :])                        
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bonfCorrection-ln.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Sample Size', 'tpb', 'Effect Size=', effectSizes[:,slice_rows])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_bhTP_ratio_median_ln[ll, :])
+        Y_std_temp.append(output_bhTP_ratio_mad_ln[ll, :])                        
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bhCorrection-ln.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Sample Size', 'tpbh', 'Effect Size=', effectSizes[:,slice_rows])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_rows:
+        Y_temp.append(output_byTP_ratio_median_ln[ll, :])
+        Y_std_temp.append(output_byTP_ratio_mad_ln[ll, :])                        
+    iSlicesPlot(sampleSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-byCorrection-ln.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Sample Size', 'tpby', 'Effect Size=', effectSizes[:,slice_rows])
+                            
+    #plot the slice of surfaces power rate; x-axis is based on effect size (rows)
+    # 2nd col, mid col, and the 2nd last col
+    slice_cols = np.array([1, int(floor(sampleSizes.shape[1]/2)), sampleSizes.shape[1]-2])
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_uncTP_ratio_median_ln[:, ll])
+        Y_std_temp.append(output_uncTP_ratio_mad_ln[:, ll])
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-noCorrection-ln-eff.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Effect Size', 'tpn', 'Sample Size=', sampleSizes[:,slice_cols])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_bonfTP_ratio_median_ln[:, ll])
+        Y_std_temp.append(output_bonfTP_ratio_mad_ln[:, ll])                        
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bonfCorrection-ln-eff.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Effect Size', 'tpb', 'Sample Size=', sampleSizes[:,slice_cols])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_bhTP_ratio_median_ln[:, ll])
+        Y_std_temp.append(output_bhTP_ratio_mad_ln[:, ll])                        
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-bhCorrection-ln-eff.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Effect Size', 'tpbh', 'Sample Size=', sampleSizes[:,slice_cols])
+                            
+    Y_temp=[]
+    Y_std_temp=[]
+    for ll in slice_cols:
+        Y_temp.append(output_byTP_ratio_median_ln[:, ll])
+        Y_std_temp.append(output_byTP_ratio_mad_ln[:, ll])                        
+    iSlicesPlot(effectSizes[0], Y_temp, Y_std_temp, \
+                            'papy_output/plot-slice-power-rate-byCorrection-ln-eff.html', \
+                            'slice-power-rate-linear-regression', \
+                            'Effect Size', 'tpby', 'Sample Size=', sampleSizes[:,slice_cols])
+    
+    
+    
     #plot all surface.
     for jj in range(0, sv_filenames.shape[0]):
         for kk in range(0, sv_filenames.shape[1]):
@@ -1254,47 +1710,47 @@ def main(argv1, argv2):
                 iSurfacePlot(linearregression, 'papy_output/plot-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), ii+1, jj+1, kk+1, sampleSizes, effectSizes,numberreps)
                 #plotting slices of variables surface plots based on sample size
                 #for diffgroups
-                Y_eff_diffgroups=[]
-                Y_eff_std_diffgroups=[]
-                for ll in range(0,len(effectSizes[0])):
-                    Y_eff_diffgroups.append(diffgroups[ii][kk][jj][ll,:])
-                    Y_eff_std_diffgroups.append([0])
-                iSlicesPlot(sampleSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, \
-                            'papy_output/plot-slice-samp-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), \
-                            'plot-slice-variable%d-diffgroups-%s'%(ii+1,sv_filenames[jj][kk]), \
-                            'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+                ## Y_eff_diffgroups=[]
+                ## Y_eff_std_diffgroups=[]
+                ## for ll in range(0,len(effectSizes[0])):
+                    ## Y_eff_diffgroups.append(diffgroups[ii][kk][jj][ll,:])
+                    ## Y_eff_std_diffgroups.append([0])
+                ## iSlicesPlot(sampleSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, \
+                            ## 'papy_output/plot-slice-samp-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'plot-slice-variable%d-diffgroups-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
                 #for linearregression            
-                Y_eff_linearregression=[]
-                Y_eff_std_linearregression=[]
-                for ll in range(0,len(effectSizes[0])):
-                    Y_eff_linearregression.append(linearregression[ii][kk][jj][ll,:])
-                    Y_eff_std_linearregression.append([0])
-                iSlicesPlot(sampleSizes[0], Y_eff_linearregression, Y_eff_std_linearregression, \
-                            'papy_output/plot-slice-samp-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), \
-                            'plot-slice-variable%d-linearregression-%s'%(ii+1,sv_filenames[jj][kk]), \
-                            'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+                ## Y_eff_linearregression=[]
+                ## Y_eff_std_linearregression=[]
+                ## for ll in range(0,len(effectSizes[0])):
+                    ## Y_eff_linearregression.append(linearregression[ii][kk][jj][ll,:])
+                    ## Y_eff_std_linearregression.append([0])
+                ## iSlicesPlot(sampleSizes[0], Y_eff_linearregression, Y_eff_std_linearregression, \
+                            ## 'papy_output/plot-slice-samp-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'plot-slice-variable%d-linearregression-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
                             
                 #plotting slices of variables surface plots based on effect size
                 #for diffgroups
-                Y_eff_diffgroups=[]
-                Y_eff_std_diffgroups=[]
-                for ll in range(0,len(sampleSizes[0])):
-                    Y_eff_diffgroups.append(diffgroups[ii][kk][jj][:,ll])
-                    Y_eff_std_diffgroups.append([0])
-                iSlicesPlot(effectSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, \
-                            'papy_output/plot-slice-eff-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), \
-                            'plot-slice-variable%d-diffgroups-%s'%(ii+1,sv_filenames[jj][kk]), \
-                            'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
+                ## Y_eff_diffgroups=[]
+                ## Y_eff_std_diffgroups=[]
+                ## for ll in range(0,len(sampleSizes[0])):
+                    ## Y_eff_diffgroups.append(diffgroups[ii][kk][jj][:,ll])
+                    ## Y_eff_std_diffgroups.append([0])
+                ## iSlicesPlot(effectSizes[0], Y_eff_diffgroups, Y_eff_std_diffgroups, \
+                            ## 'papy_output/plot-slice-eff-variable%d-diffgroups-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'plot-slice-variable%d-diffgroups-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
                 #for linearregression            
-                Y_eff_linearregression=[]
-                Y_eff_std_linearregression=[]
-                for ll in range(0,len(sampleSizes[0])):
-                    Y_eff_linearregression.append(linearregression[ii][kk][jj][:,ll])
-                    Y_eff_std_linearregression.append([0])
-                iSlicesPlot(effectSizes[0], Y_eff_linearregression, Y_eff_std_linearregression, \
-                            'papy_output/plot-slice-eff-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), \
-                            'plot-slice-variable%d-linearregression-%s'%(ii+1,sv_filenames[jj][kk]), \
-                            'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
+                ## Y_eff_linearregression=[]
+                ## Y_eff_std_linearregression=[]
+                ## for ll in range(0,len(sampleSizes[0])):
+                    ## Y_eff_linearregression.append(linearregression[ii][kk][jj][:,ll])
+                    ## Y_eff_std_linearregression.append([0])
+                ## iSlicesPlot(effectSizes[0], Y_eff_linearregression, Y_eff_std_linearregression, \
+                            ## 'papy_output/plot-slice-eff-variable%d-linearregression-%s.html'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'plot-slice-variable%d-linearregression-%s'%(ii+1,sv_filenames[jj][kk]), \
+                            ## 'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
 
     
     
@@ -1331,46 +1787,46 @@ def main(argv1, argv2):
             file_handle.close()
             
             #plotting slices of mean surface plots based on sample size
-            Y_eff_mean_diffgroups=[]
-            Y_eff_std_diffgroups=[]
-            for ii in range(0,len(effectSizes[0])):
-                Y_eff_mean_diffgroups.append(mean_diffgroups_array[ii,:])
-                Y_eff_std_diffgroups.append(std_diffgroups_array[ii,:])                                
-            iSlicesPlot(sampleSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, \
-                        'papy_output/plot-slice-samp-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]),\
-                        'plot-slice-mean-diffgroups-%s'%(sv_filenames[jj][kk]), \
-                        'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+            ## Y_eff_mean_diffgroups=[]
+            ## Y_eff_std_diffgroups=[]
+            ## for ii in range(0,len(effectSizes[0])):
+                ## Y_eff_mean_diffgroups.append(mean_diffgroups_array[ii,:])
+                ## Y_eff_std_diffgroups.append(std_diffgroups_array[ii,:])                                
+            ## iSlicesPlot(sampleSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, \
+                        ## 'papy_output/plot-slice-samp-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]),\
+                        ## 'plot-slice-mean-diffgroups-%s'%(sv_filenames[jj][kk]), \
+                        ## 'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
                         
-            Y_eff_mean_linearregression=[]
-            Y_eff_std_linearregression=[]
-            for ii in range(0,len(effectSizes[0])):
-                Y_eff_mean_linearregression.append(mean_linearregression_array[ii,:])
-                Y_eff_std_linearregression.append(std_linearregression_array[ii,:])                                
-            iSlicesPlot(sampleSizes[0], Y_eff_mean_linearregression, Y_eff_std_linearregression, \
-                        'papy_output/plot-slice-samp-mean-linearregression-%s.html'%(sv_filenames[jj][kk]),\
-                        'plot-slice-mean-linearregression-%s'%(sv_filenames[jj][kk]), \
-                        'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
+            ## Y_eff_mean_linearregression=[]
+            ## Y_eff_std_linearregression=[]
+            ## for ii in range(0,len(effectSizes[0])):
+                ## Y_eff_mean_linearregression.append(mean_linearregression_array[ii,:])
+                ## Y_eff_std_linearregression.append(std_linearregression_array[ii,:])                                
+            ## iSlicesPlot(sampleSizes[0], Y_eff_mean_linearregression, Y_eff_std_linearregression, \
+                        ## 'papy_output/plot-slice-samp-mean-linearregression-%s.html'%(sv_filenames[jj][kk]),\
+                        ## 'plot-slice-mean-linearregression-%s'%(sv_filenames[jj][kk]), \
+                        ## 'Sample Size', sv_filenames[jj][kk], 'Effect Size=', effectSizes)
             
             #plotting slices of mean surface plots based on effect size
-            Y_eff_mean_diffgroups=[]
-            Y_eff_std_diffgroups=[]
-            for ii in range(0,len(sampleSizes[0])):
-                Y_eff_mean_diffgroups.append(mean_diffgroups_array[:,ii])
-                Y_eff_std_diffgroups.append(std_diffgroups_array[:,ii])                                
-            iSlicesPlot(effectSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, \
-                        'papy_output/plot-slice-eff-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]),\
-                        'plot-slice-mean-diffgroups-%s'%(sv_filenames[jj][kk]), \
-                        'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
+            ## Y_eff_mean_diffgroups=[]
+            ## Y_eff_std_diffgroups=[]
+            ## for ii in range(0,len(sampleSizes[0])):
+                ## Y_eff_mean_diffgroups.append(mean_diffgroups_array[:,ii])
+                ## Y_eff_std_diffgroups.append(std_diffgroups_array[:,ii])                                
+            ## iSlicesPlot(effectSizes[0], Y_eff_mean_diffgroups, Y_eff_std_diffgroups, \
+                        ## 'papy_output/plot-slice-eff-mean-diffgroups-%s.html'%(sv_filenames[jj][kk]),\
+                        ## 'plot-slice-mean-diffgroups-%s'%(sv_filenames[jj][kk]), \
+                        ## 'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
                         
-            Y_eff_mean_linearregression=[]
-            Y_eff_std_linearregression=[]
-            for ii in range(0,len(sampleSizes[0])):
-                Y_eff_mean_linearregression.append(mean_linearregression_array[:,ii])
-                Y_eff_std_linearregression.append(std_linearregression_array[:,ii])                                
-            iSlicesPlot(effectSizes[0], Y_eff_mean_linearregression, Y_eff_std_linearregression, \
-                        'papy_output/plot-slice-eff-mean-linearregression-%s.html'%(sv_filenames[jj][kk]),\
-                        'plot-slice-mean-linearregression-%s'%(sv_filenames[jj][kk]), \
-                        'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
+            ## Y_eff_mean_linearregression=[]
+            ## Y_eff_std_linearregression=[]
+            ## for ii in range(0,len(sampleSizes[0])):
+                ## Y_eff_mean_linearregression.append(mean_linearregression_array[:,ii])
+                ## Y_eff_std_linearregression.append(std_linearregression_array[:,ii])                                
+            ## iSlicesPlot(effectSizes[0], Y_eff_mean_linearregression, Y_eff_std_linearregression, \
+                        ## 'papy_output/plot-slice-eff-mean-linearregression-%s.html'%(sv_filenames[jj][kk]),\
+                        ## 'plot-slice-mean-linearregression-%s'%(sv_filenames[jj][kk]), \
+                        ## 'Effect Size', sv_filenames[jj][kk], 'Sample Size=', sampleSizes)
             
             #plotting surface plots
             for ii in range(0,3):
