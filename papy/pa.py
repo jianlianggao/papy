@@ -11,16 +11,16 @@ import scipy.stats as scistats
 import statsmodels.formula.api as sm                    #for linear regression
 import matplotlib.pyplot as plt
 import shutil                                           #for creating zip files
-from math import fabs,floor,ceil,log,exp
+from math import fabs,floor,log,exp
 from datetime import datetime
 from joblib import Parallel, delayed                    #for Parallel computing
 from statsmodels import robust                          #for work out median absolute deviation
-
+'''
 # For 3d plots. This import is necessary to have 3D plotting below
 #from mpl_toolkits.mplot3d import Axes3D
 # for saving the plot to pdf file 
 #from matplotlib.backends.backend_pdf import PdfPages
-
+'''
 ##=======Beginning of interactive SurfacePlot============
 def iSurfacePlot(output, svfilename, variable,metric,correction, sizeeff,samplsizes,nreps):
     import plotly as py
@@ -201,7 +201,9 @@ def iSlicesPlot(X, Y, Error_y, svfilename, plot_title, x_caption, y_caption, tra
 )
     fig = go.Figure(data=data, layout=layout)
     py.offline.plot(fig, filename = svfilename, auto_open=False)
+##====== End of scatter plot for slices of surface plots===============
 
+##====== Beginning of surface plots for power rate only===============
 def iSurfacePlotTPR(output, svfilename, correction, sizeeff,samplsizes,nreps):
     import plotly as py
     import plotly.graph_objs as go
@@ -259,7 +261,7 @@ def iSurfacePlotTPR(output, svfilename, correction, sizeeff,samplsizes,nreps):
     fig = go.Figure(data=data, layout=layout)
     fig['layout'].update(scene=dict(camera=camera))
     py.offline.plot(fig, filename=svfilename, auto_open=False)
-##=======End of interactive SurfacePlot============
+##====== End of surface plots for power rate only===============
 
     
 ''' 
@@ -886,12 +888,7 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_byTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)            
             output_byTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_byTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)
-            
-            #output_uncTP_ratio_mad[currEff][currSamp] = np.std(np.mean(output_uncTP[currEff][currSamp], axis=0))
-            #output_bonfTP_ratio_std[currEff][currSamp] = np.std(np.mean(output_bonfTP[currEff][currSamp], axis=0))
-            #output_bhTP_ratio_std[currEff][currSamp] = np.std(np.mean(output_bhTP[currEff][currSamp], axis=0))
-            #output_byTP_ratio_std[currEff][currSamp] = np.std(np.mean(output_byTP[currEff][currSamp], axis=0))
+            output_byTP_ratio_mad[currEff][currSamp] = robust.mad(tmp_median_array)            
             
     try:
         return output, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
