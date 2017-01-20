@@ -863,10 +863,10 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
     rest_num_overall_results = numVars - num_overall_results * (cores-1)
     for novr in range(rest_num_overall_results):
         output.append(output2[ii][novr]) 
-    output_uncTP = np.append(output_uncTP, output2[ii][rest_num_overall_results],axis=2)
-    output_bonfTP = np.append(output_bonfTP, output2[ii][rest_num_overall_results+1],axis=2)
-    output_bhTP = np.append(output_bhTP, output2[ii][rest_num_overall_results+2],axis=2)
-    output_byTP = np.append(output_byTP, output2[ii][rest_num_overall_results+3],axis=2)
+    output_uncTP = np.append(output_uncTP, output2[cores-1][rest_num_overall_results],axis=2)
+    output_bonfTP = np.append(output_bonfTP, output2[cores-1][rest_num_overall_results+1],axis=2)
+    output_bhTP = np.append(output_bhTP, output2[cores-1][rest_num_overall_results+2],axis=2)
+    output_byTP = np.append(output_byTP, output2[cores-1][rest_num_overall_results+3],axis=2)
     
     output = np.array(output)    
     ##for the mean proportion of number of variables achieve the power; and the std
