@@ -1192,7 +1192,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
     
 def _chunkMatrix(data, num): ##different from Caroline's one, which uses list
     cols = data.shape[1]
-    avg = int(ceil(cols / float(num)))
+    avg = int(round(cols / float(num)))
     ##out = np.zeros((num, data.shape[0], avg))
     out = []
     for i in range(num):
