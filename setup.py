@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(name='papy',
-      version='1.0',
+      version='2.0',
       description='Power Analysis tool in Python',
       author='Gonçalo Correia, Jianliang Gao',
       author_email='j.gao@imperial.ac.uk',
