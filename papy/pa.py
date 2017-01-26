@@ -395,7 +395,9 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     else:
         cores = multiprocessing.cpu_count()
     Samples_seg = _chunkMatrix(Samples, cores)
-    correlationMat_seg = _chunkMatrix(correlationMat, cores)
+    #correlationMat_seg = _chunkMatrix(correlationMat, cores)
+    correlationMat_seg = correlationMat
+    
     ## Initialize the output structures
     ##output2 = np.zeros((cores,1, 4, nRepeats, nEffSizes,nSampSizes)) 
     output2=[]
@@ -427,22 +429,23 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     output_bhTP = np.array(output2[0][num_overall_results+2])
     output_byTP = np.array(output2[0][num_overall_results+3])
     
-    for ii in range(1, cores-1):
-        for novr in range(num_overall_results):
-            output.append(output2[ii][novr])
+    if cores>1:
+        for ii in range(1, cores-1):
+            for novr in range(num_overall_results):
+                output.append(output2[ii][novr])
+            
+            output_uncTP = np.append(output_uncTP, output2[ii][num_overall_results],axis=2)
+            output_bonfTP = np.append(output_bonfTP, output2[ii][num_overall_results+1],axis=2)
+            output_bhTP = np.append(output_bhTP, output2[ii][num_overall_results+2],axis=2)
+            output_byTP = np.append(output_byTP, output2[ii][num_overall_results+3],axis=2)
         
-        output_uncTP = np.append(output_uncTP, output2[ii][num_overall_results],axis=2)
-        output_bonfTP = np.append(output_bonfTP, output2[ii][num_overall_results+1],axis=2)
-        output_bhTP = np.append(output_bhTP, output2[ii][num_overall_results+2],axis=2)
-        output_byTP = np.append(output_byTP, output2[ii][num_overall_results+3],axis=2)
-    
-    rest_num_overall_results = numVars - num_overall_results * (cores-1)
-    for novr in range(rest_num_overall_results):
-            output.append(output2[cores-1][novr])
-    output_uncTP = np.append(output_uncTP, output2[cores-1][rest_num_overall_results],axis=2)
-    output_bonfTP = np.append(output_bonfTP, output2[cores-1][rest_num_overall_results+1],axis=2)
-    output_bhTP = np.append(output_bhTP, output2[cores-1][rest_num_overall_results+2],axis=2)
-    output_byTP = np.append(output_byTP, output2[cores-1][rest_num_overall_results+3],axis=2)        
+        rest_num_overall_results = numVars - num_overall_results * (cores-1)
+        for novr in range(rest_num_overall_results):
+                output.append(output2[cores-1][novr])
+        output_uncTP = np.append(output_uncTP, output2[cores-1][rest_num_overall_results],axis=2)
+        output_bonfTP = np.append(output_bonfTP, output2[cores-1][rest_num_overall_results+1],axis=2)
+        output_bhTP = np.append(output_bhTP, output2[cores-1][rest_num_overall_results+2],axis=2)
+        output_byTP = np.append(output_byTP, output2[cores-1][rest_num_overall_results+3],axis=2)        
     
     output = np.array(output)    
     ##for the mean proportion of number of variables achieve the power; and the std
@@ -589,8 +592,9 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                     h1, crit_p, adj_ci_cvrg, pBY = fdr_bh(p, 0.05, 'dep')
                     h1, crit_p, adj_ci_cvrg, pBH = fdr_bh(p, 0.05, 'pdep')
                     
-                    ##need to debug below
-                    corrVector = correlationMat_seg[currCore][:,currVar]
+                    ##
+                    #corrVector = correlationMat_seg[currCore][:,currVar]
+                    corrVector = correlationMat_seg[:,currVar]
                     
                     uncTNTot, uncTPTot, uncFPTot, uncFNTot, uncFDTot = calcConfMatrixUniv(pUnc, corrVector, signThreshold, 0.8)
                     bonfTNTot, bonfTPTot, bonfFPTot, bonfFNTot, bonfFDTot = calcConfMatrixUniv(pBonf, corrVector, signThreshold, 0.8)
@@ -684,10 +688,15 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                         multiplerepeats.BenjYek['FD'] = np.append(multiplerepeats.BenjYek['FD'], byFDTot)
                         
                     ##storing each result
-                    output_all_uncTP_tmp[currEff][currSampSize][currVar][currRepeat]=uncTPTot
-                    output_all_bonfTP_tmp[currEff][currSampSize][currVar][currRepeat]=bonfTPTot
-                    output_all_bhTP_tmp[currEff][currSampSize][currVar][currRepeat]=bhTPTot
-                    output_all_byTP_tmp[currEff][currSampSize][currVar][currRepeat]=byTPTot
+                    ## output_all_uncTP_tmp[currEff][currSampSize][currVar][currRepeat]=uncTPTot
+                    ## output_all_bonfTP_tmp[currEff][currSampSize][currVar][currRepeat]=bonfTPTot
+                    ## output_all_bhTP_tmp[currEff][currSampSize][currVar][currRepeat]=bhTPTot
+                    ## output_all_byTP_tmp[currEff][currSampSize][currVar][currRepeat]=byTPTot
+                    
+                output_all_uncTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.noCorrection['TP']
+                output_all_bonfTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.Bonferroni['TP']
+                output_all_bhTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.BenjYek['TP']
+                output_all_byTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.BenjYek['TP']    
                     
                 ##end of for currRepeat in range(0, nRepeats):
                     
@@ -804,6 +813,7 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
         nSampSizes = sampSizes.shape[1]
     elif (sampSizes.ndim ==1):
         nSampSizes = sampSizes.shape[0]
+        
     if (effectSizes.ndim >1):
         nEffSizes = effectSizes.shape[1]
     elif (effectSizes.ndim ==1):
@@ -818,17 +828,19 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
         cores = 1
     else:
         cores = multiprocessing.cpu_count()
-    ## cores = 1
+    ## cores = 2
     print cores    
     Samples_seg = _chunkMatrix(Samples, cores)
-    correlationMat_seg = _chunkMatrix(correlationMat, cores)
-    
+    #correlationMat_seg = _chunkMatrix(correlationMat, cores) ##this line caused error of calculation on 2nd or other cores
+    correlationMat_seg=correlationMat
     output2=[]
     
     ##define an array for storing the results in each step of repeat for all variables
     ##with all effect sizes and sample sizes; 
     output_allsteps_tmp=[]
-    
+    #debug - using another multiporcessing method to run f_multiproc
+    #pool = multiprocessing.Pool(processes=cores)
+    #output2 = [pool.apply_async(f_multiproc,args=(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, wk)) for wk in range(cores)]
     output2 = Parallel(n_jobs=cores)(delayed(f_multiproc)(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, ii) for ii in range(cores))            #n_jobs=-1 means using all CPUs or any other number>1 to specify the number of CPUs to use
     ## for ii in range(numVars):
             ## f_multiproc(ii)
@@ -851,22 +863,24 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
     output_bhTP = np.array(output2[0][num_overall_results+2])
     output_byTP = np.array(output2[0][num_overall_results+3])
     
-    for ii in range(1, cores-1):
-        for novr in range(num_overall_results):
-            output.append(output2[ii][novr])
+    if cores>1:
+        for ii in range(1, cores-1):
+            for novr in range(num_overall_results):
+                output.append(output2[ii][novr])
+            
+            output_uncTP = np.append(output_uncTP, output2[ii][num_overall_results],axis=2)
+            output_bonfTP = np.append(output_bonfTP, output2[ii][num_overall_results+1],axis=2)
+            output_bhTP = np.append(output_bhTP, output2[ii][num_overall_results+2],axis=2)
+            output_byTP = np.append(output_byTP, output2[ii][num_overall_results+3],axis=2)
         
-        output_uncTP = np.append(output_uncTP, output2[ii][num_overall_results],axis=2)
-        output_bonfTP = np.append(output_bonfTP, output2[ii][num_overall_results+1],axis=2)
-        output_bhTP = np.append(output_bhTP, output2[ii][num_overall_results+2],axis=2)
-        output_byTP = np.append(output_byTP, output2[ii][num_overall_results+3],axis=2)
+        rest_num_overall_results = numVars - num_overall_results * (cores-1)
+        for novr in range(rest_num_overall_results):
+            output.append(output2[cores-1][novr]) 
+        output_uncTP = np.append(output_uncTP, output2[cores-1][rest_num_overall_results],axis=2)
+        output_bonfTP = np.append(output_bonfTP, output2[cores-1][rest_num_overall_results+1],axis=2)
+        output_bhTP = np.append(output_bhTP, output2[cores-1][rest_num_overall_results+2],axis=2)
+        output_byTP = np.append(output_byTP, output2[cores-1][rest_num_overall_results+3],axis=2)
     
-    rest_num_overall_results = numVars - num_overall_results * (cores-1)
-    for novr in range(rest_num_overall_results):
-        output.append(output2[cores-1][novr]) 
-    output_uncTP = np.append(output_uncTP, output2[cores-1][rest_num_overall_results],axis=2)
-    output_bonfTP = np.append(output_bonfTP, output2[cores-1][rest_num_overall_results+1],axis=2)
-    output_bhTP = np.append(output_bhTP, output2[cores-1][rest_num_overall_results+2],axis=2)
-    output_byTP = np.append(output_byTP, output2[cores-1][rest_num_overall_results+3],axis=2)
     
     output = np.array(output)    
     ##for the mean proportion of number of variables achieve the power; and the std
@@ -913,7 +927,8 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
             
     try:
         return output, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
-                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad
+                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad, \
+                output_uncTP, output_bonfTP, output_bhTP, output_byTP
             
     except:
         print 'error occurs when returning output'
@@ -924,7 +939,8 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
 
     ##re-check numVars
     numVars = Samples_seg[currCore].shape[1]
-    
+    #debug
+    print "numVars=%d; current core=%d"%(numVars, currCore)
     ##for storing all results in all repeated steps with all effect sizes and sample
     ##sizes for Power (TP) in current samples_seg
     output_all_uncTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
@@ -938,7 +954,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
         storeVar = np.zeros((4,nRepeats))
     elif (nEffSizes > 1 or nSampSizes > 1):
         storeVar = np.zeros((4,nRepeats, nEffSizes, nSampSizes))                            
-    ##define uncStruct -- structual data
+    ##define uncStruct, bonfStruct, bhStruct, byStruct  -- structual data
     ##STP-- State for True Positive prediction; SFP -- State for False Positive prediction
     uncStruct = {'TP':np.zeros((nEffSizes, nSampSizes)),'FP':np.zeros((nEffSizes, nSampSizes)),'TN':np.zeros((nEffSizes, nSampSizes)),\
                  'FN':np.zeros((nEffSizes, nSampSizes)),'FD':np.zeros((nEffSizes, nSampSizes)),'STP':np.zeros((nEffSizes, nSampSizes)),\
@@ -981,12 +997,12 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                     
                 for currRepeat in range(0, nRepeats):
                     ## Select a subset of the simulated spectra
-                    selectIndex = randperm(len(Samples_seg[currCore]), 2 * sampSizes[0][currSampSize])
-                                    
+                    selectIndex = randperm(len(Samples_seg[currCore]), 2 * sampSizes[0][currSampSize])  ##sampSizes is a 1xn array
                     
+                    ## check selectIndex is a numpy array, if not, then convert to numpy array.
                     if (type(selectIndex).__name__ != 'ndarray'):
                         selectIndex = np.array(selectIndex)
-                    SelSamples = Samples_seg[currCore][selectIndex]                    # matrix slicing
+                    SelSamples = Samples_seg[currCore][selectIndex]                    # matrix slicing by rows
                     
                     
                     ##Assume class balanced, modify proportion of group here
@@ -996,8 +1012,9 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                         
                     ##Introduce change
                     corrVector = np.array([])
-                    corrVector = correlationMat_seg[currCore][:,currVar]
-                    
+                    #corrVector = correlationMat_seg[currCore][:,currVar] ##this line caused error of calculation on 2nd or other cores
+                    corrVector = correlationMat_seg[:,currVar]
+                
                         
                     ## stdSelSamples = np.std(SelSamples, axis=0, ddof=1)
                     for k in range(0,numVars):
@@ -1023,7 +1040,6 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                         
                     pUnc = p                ##pUnc and p have 1xnumVars elements
                     pBonf = p * numVars     ##pBonf has 1xnumVars elements
-                    
                     
                     h1, crit_p, adj_ci_cvrg, pBY = fdr_bh(p, 0.05, 'dep')
                     h1, crit_p, adj_ci_cvrg, pBH = fdr_bh(p, 0.05, 'pdep')
@@ -1122,10 +1138,15 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                         
                     ##storing each result
                     ##output['EACHSTEP'][currVar][currEff][currSampSize][currRepeat]=bonfFNTot
-                    output_all_uncTP_tmp[currEff][currSampSize][currVar][currRepeat]=uncTPTot
-                    output_all_bonfTP_tmp[currEff][currSampSize][currVar][currRepeat]=bonfTPTot
-                    output_all_bhTP_tmp[currEff][currSampSize][currVar][currRepeat]=bhTPTot
-                    output_all_byTP_tmp[currEff][currSampSize][currVar][currRepeat]=byTPTot    
+                    ## output_all_uncTP_tmp[currEff][currSampSize][currVar][currRepeat]=uncTPTot
+                    ## output_all_bonfTP_tmp[currEff][currSampSize][currVar][currRepeat]=bonfTPTot
+                    ## output_all_bhTP_tmp[currEff][currSampSize][currVar][currRepeat]=bhTPTot
+                    ## output_all_byTP_tmp[currEff][currSampSize][currVar][currRepeat]=byTPTot 
+                   
+                output_all_uncTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.noCorrection['TP']
+                output_all_bonfTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.Bonferroni['TP']
+                output_all_bhTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.BenjYek['TP']
+                output_all_byTP_tmp[currEff][currSampSize][currVar]=multiplerepeats.BenjYek['TP']        
                 ##for debugging
                 ##output multiplerepeats results
                 ##np.savetxt(file_handle,  multiplerepeats.noCorrection['FN']) 
@@ -1200,6 +1221,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
     output.append(output_all_bonfTP_tmp)
     output.append(output_all_bhTP_tmp)
     output.append(output_all_byTP_tmp)
+    
     try:        
         return output
     except:        
@@ -1453,7 +1475,8 @@ def main(argv1, argv2):
     num_cols = int(argv2)
     if (num_cols > 0):
         diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
-                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad \
+                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad, \
+                output_uncTP, output_bonfTP, output_bhTP, output_byTP \
                 = PCalc_2Group(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
         linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
                 output_uncTP_ratio_mad_ln, output_bonfTP_ratio_mad_ln, output_bhTP_ratio_mad_ln, output_byTP_ratio_mad_ln \
@@ -1464,7 +1487,8 @@ def main(argv1, argv2):
     else:
         t_start = datetime.now()
         diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
-                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad \
+                output_uncTP_ratio_mad, output_bonfTP_ratio_mad, output_bhTP_ratio_mad, output_byTP_ratio_mad, \
+                output_uncTP, output_bonfTP, output_bhTP, output_byTP \
                 = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
         linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
                 output_uncTP_ratio_mad_ln, output_bonfTP_ratio_mad_ln, output_bhTP_ratio_mad_ln, output_byTP_ratio_mad_ln \
@@ -1535,7 +1559,7 @@ def main(argv1, argv2):
     iSurfacePlotTPR(output_bonfTP_ratio_median, 'papy_output/plot-power-rate-bonfCorrection-diffgroups.html',  'Bonferroni correction', sampleSizes, effectSizes, numberreps)
     iSurfacePlotTPR(output_bhTP_ratio_median, 'papy_output/plot-power-rate-bhCorrection-diffgroups.html',  'Benjamini-Hochberg correction', sampleSizes, effectSizes, numberreps)
     iSurfacePlotTPR(output_byTP_ratio_median, 'papy_output/plot-power-rate-byCorrection-diffgroups.html',  'Benjamini-Yekutieli correction', sampleSizes, effectSizes, numberreps)
-    
+     
     ##plot the slice of surfaces power rate; x-axis is based on sample size (columns)
     ## 2nd row, mid row, and the 2nd last row
     slice_rows = np.array([1, int(floor(effectSizes.shape[1]/2)), effectSizes.shape[1]-2]) 
