@@ -78,29 +78,30 @@ def iSurfacePlot(results, svfilename, variable, sizeeff,samplsizes):
     fig = go.Figure(data=data, layout=layout)
     fig['layout'].update(scene=dict(camera=camera))
     py.offline.plot(fig, filename="z_plots_%s_variable_%i.html"%(svfilename,variable), auto_open=False)
+    print("Your plot is saved as z_plots_%s_variable_%i.html"%(svfilename,variable))
 
 def main(argv1, argv2, argv3):
-    print argv1
-    print argv2
-    print argv3
+    print(argv1)
+    print(argv2)
+    print(argv3)
     data = pd.read_csv("%s-%s.csv"%(argv1, argv2))
     titles=list(data.columns.values)
     output=data.loc[data['Variables']==int(argv3)]
     results=output.loc[:,titles[2]:]
     variable1=data.loc[data['Variables']==1]
-    effect_size=variable1.loc[:, titles[1]]
+    effect_size=np.array(variable1.loc[:, titles[1]])
     sample_size=titles[2:]
-    sample_size=map(int, sample_size)
+    sample_size=np.array(list(map(int, sample_size)))
     iSurfacePlot(results, argv2, int(argv3), sample_size,effect_size)
 
 if __name__=="__main__":
-    ## try:
+    try:
         main(sys.argv[1], sys.argv[2], sys.argv[3])
-    ## except:
-        ## print 'usage: python plotSurface.py arg1 arg2 arg3'
-        ## print 'for example: python plotSurface.py \'diffgroups\' \'fnb\' 8 '
-        ## print '--arg1 can be \'linearregression\' or \'diffgroups\' '
-        ## print '--arg2 can be one of the following combination from:'
-        ## print '[\'tp\',\'fn\',\'tn\',\'fp\']  and [\'n\',\'b\',\'bh\',\'by\']'
-        ## print 'for example \'tpn\', means True Positive (no correction)'
-        ## print '--arg3 is an integer as number of variables'
+    except:
+        print('usage: python plotSurface.py arg1 arg2 arg3')
+        print('for example: python plotSurface.py diffgroups fnb 8 ')
+        print('--arg1 can be \'linearregression\' or \'diffgroups\' ')
+        print('--arg2 can be one of the following combination from:')
+        print('[tp,  fn, tn, fp]  and [ n, b, bh, by]')
+        print('for example tpn, means True Positive (no correction)')
+        print('--arg3 is an integer as number of variables')
