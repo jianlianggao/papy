@@ -272,7 +272,7 @@ def simulateLogNormal(data, covType, nSamples):
         varlogData=np.var(logData,axis=0)       #get variance of log data by each column
         covLog=np.diag(varlogData)               #generate a matrix with diagonal of variance of log Data
     else:
-        print 'Unknown Covariance type'   
+        print('Unknown Covariance type')
     
     ##np.random.seed(10)                                  ##add random seed for testing purpose    
     simData = np.random.multivariate_normal(np.transpose(meansLog),covLog,nSamples)
@@ -299,11 +299,11 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     
     try:
         if max(sampSizes) >= nSimSamp:
-            print 'Number of simulated samples smaller than maximum of samplesizes to check - increased'
+            print('Number of simulated samples smaller than maximum of samplesizes to check - increased')
             nSimSamp = max(sampSizes) + 500
     except ValueError:
         if max(max(sampSizes)) >= nSimSamp:
-            print 'Number of simulated samples smaller than maximum of samplesizes to check - increased'
+            print('Number of simulated samples smaller than maximum of samplesizes to check - increased')
             nSimSamp = max(max(sampSizes)) + 500
     ## convert matrix to numpy array type if needed
     if (type(data).__name__ != 'ndarray'):
@@ -435,7 +435,7 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
         return output, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
                 output_uncTP_ratio_iqr, output_bonfTP_ratio_iqr, output_bhTP_ratio_iqr, output_byTP_ratio_iqr
     except:
-        print 'error occurs when returning output'
+        print('error occurs when returning output')
 
 def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, currCore):
     
@@ -703,7 +703,7 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
                 
         output.append(storeVar)
 
-    print '|| \n'
+    print('|| \n')
     output.append(output_all_uncTP_tmp)
     output.append(output_all_bonfTP_tmp)
     output.append(output_all_bhTP_tmp)
@@ -711,7 +711,7 @@ def f_multiproc1(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nE
     try:
         return output
     except:
-        print 'error occurs when returning output in parallel'
+        print('error occurs when returning output in parallel')
     
 def randperm1(totalLen):
     ##function of random permuation and pick up the sub array according to the specified size
@@ -730,11 +730,11 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
     
     try:
         if 2*max(sampSizes) >= nSimSamp:
-            print 'Number of simulated samples smaller than maximum of samplesizes to check - increased'
+            print('Number of simulated samples smaller than maximum of samplesizes to check - increased')
             nSimSamp = 2*max(sampSizes) + 500
     except ValueError:
         if 2*max(max(sampSizes)) >= nSimSamp:
-            print 'Number of simulated samples smaller than maximum of samplesizes to check - increased'
+            print('Number of simulated samples smaller than maximum of samplesizes to check - increased')
             nSimSamp = 2*max(max(sampSizes)) + 500
     ## convert matrix to numpy array type if needed
     if (type(data).__name__ != 'ndarray'):
@@ -867,7 +867,7 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
                 output_uncTP, output_bonfTP, output_bhTP, output_byTP
             
     except:
-        print 'error occurs when returning output'
+        print('error occurs when returning output')
         
 def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, currCore):
     
@@ -879,7 +879,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
         numVars = cols - int(round(cols/cores))*(cores-1)
     
     #debug
-    print "numVars=%d; current core=%d"%(numVars, currCore)
+    print("numVars=%d; current core=%d"%(numVars, currCore))
     ##for storing all results in all repeated steps with all effect sizes and sample
     ##sizes for Power (TP) in current samples_seg
     output_all_uncTP_tmp=np.zeros((nEffSizes, nSampSizes, numVars, nRepeats))
@@ -1142,7 +1142,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
                 storeVar[3][i] = byStruct[stats[i]]
             
         output.append(storeVar)
-    print '| \n'
+    print('| \n')
     output.append(output_all_uncTP_tmp)
     output.append(output_all_bonfTP_tmp)
     output.append(output_all_bhTP_tmp)
@@ -1151,7 +1151,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
     try:        
         return output
     except:        
-        print 'error occurs when returning output in parallel'         
+        print('error occurs when returning output in parallel')      
     
     
 def _chunkMatrix(data, num): ##different from Caroline's one, which uses list
@@ -1172,7 +1172,10 @@ def randperm(totalLen, subLen):
     ##np.random.seed(10)                                  ##add random seed for testing purpose
     tempList = np.random.permutation(totalLen)                  ##generate a random permutation array
     ##random.seed(10)                                  ##add random seed for testing purpose
-    tempList1 = random.sample(tempList,subLen)
+    try:
+        tempList1 = random.sample(tempList,subLen)
+    except TypeError:
+        tempList1 = random.sample(list(tempList),subLen)
     return tempList1
 
 def write_file(data,filename): #creates file and writes list to it
@@ -1203,11 +1206,11 @@ def fdr_bh(*args):
         if (type(pvals).__name__ != 'ndarray'): 
             pvals = np.array(pvals)               
     except IndexError:
-      print "Usage: fdr_bh(<arg1>,<arg2>,<arg3>,<arg4>)"
-      print "arg1 as p-value matrix (mandatory must be provided"
-      print "arg2 as false discovery rate(optional)"
-      print "arg3 as method:'pdep' or 'dep', 'pdep' is given as default(optional)"
-      print "arg4 as report:'yes' or 'no', 'no' is given as default(optional)"
+      print("Usage: fdr_bh(<arg1>,<arg2>,<arg3>,<arg4>)")
+      print("arg1 as p-value matrix (mandatory must be provided")
+      print("arg2 as false discovery rate(optional)")
+      print("arg3 as method:'pdep' or 'dep', 'pdep' is given as default(optional)")
+      print("arg4 as report:'yes' or 'no', 'no' is given as default(optional)")
       sys.exit(1)
           
     if len(args)<2:
@@ -1253,7 +1256,7 @@ def fdr_bh(*args):
         compute adjusted p-values
         '''
     else:
-        print 'Argument \'method\' needs to be \'pdep\' or \'dep\'.'
+        print('Argument \'method\' needs to be \'pdep\' or \'dep\'.')
     
     nargout = expecting()                       #get the number of expecting outputs from caller
     if (nargout > 3):
@@ -1289,18 +1292,18 @@ def fdr_bh(*args):
     if (report == 'yes'):
         n_sig=sum(p_sorted<=crit_p)
         if (n_sig==1):
-            print 'Out of %d tests, %d is significant using a false discovery rate of %f.\n' %(m,n_sig,q)
+            print('Out of %d tests, %d is significant using a false discovery rate of %f.\n' %(m,n_sig,q))
         else:
-            print 'Out of %d tests, %d are significant using a false discovery rate of %f.\n'%(m,n_sig,q)
+            print('Out of %d tests, %d are significant using a false discovery rate of %f.\n'%(m,n_sig,q))
         if (method == 'pdep'):
-            print 'FDR/FCR procedure used is guaranteed valid for independent or positively dependent tests.\n'
+            print('FDR/FCR procedure used is guaranteed valid for independent or positively dependent tests.\n')
         else:
-            print 'FDR/FCR procedure used is guaranteed valid for independent or dependent tests.\n'
+            print('FDR/FCR procedure used is guaranteed valid for independent or dependent tests.\n')
     ## return the results
     try:
         return h1, crit_p, adj_ci_cvrg, adj_p
     except:
-        print "Errors occur when returning h1, crit_p, adj_ci_cvrg and adj_p"
+        print("Errors occur when returning h1, crit_p, adj_ci_cvrg and adj_p")
         
         
 def calcConfMatrixUniv(p, corrVector, signThreshold, corrThresh):
@@ -1358,7 +1361,7 @@ def calcConfMatrixUniv(p, corrVector, signThreshold, corrThresh):
     try:
         return TNtot, TPtot, FPtot, FNtot, FDtot
     except:
-        print "Errors occur when returning uncTNTot, uncTPTot, uncFPTot, uncFNTot, uncFDTot"
+        print("Errors occur when returning uncTNTot, uncTPTot, uncFPTot, uncFNTot, uncFDTot")
 
 def read2array(filename):
     dataArray = []
@@ -1369,15 +1372,13 @@ def read2array(filename):
         dataArray = [[float(x) for x in y] for y in dataArray]              #The array was created with all elements as strings. Convert into floats.
         dataArray = np.array(dataArray)                                     #convert to numpy array type
     except IOError:
-        print filename + " does not exist!"
+        print(filename + " does not exist!")
         
     return dataArray
 
 
-def main(argv1, argv2): 
-    ##take input arguments
-    print argv1
-    print argv2   
+def main(argv1, argv2, argv3, argv4, argv5, argv6): 
+    
     ## read the data into an array;
     XSRV = read2array(argv1)
     if (type(XSRV).__name__ != 'ndarray'):
@@ -1390,32 +1391,47 @@ def main(argv1, argv2):
         rows = 1
         cols = XSRV.shape[0]
     
-    print 'Input data matrix size is :' + str(rows) + ',' + str(cols)
+    print('Input data matrix size is :' + str(rows) + ',' + str(cols))
+    
+    tmpStr=argv4.split(':')
+    argv4=range(int(tmpStr[0]), int(tmpStr[2]), int(tmpStr[1]))
+    if argv4[0]==0:
+        argv4[0]=1
+    argv4=np.array(argv4)
+    argv4=np.reshape(argv4,(1,len(argv4))) 
+        
+    tmpStr=argv5.split(':')
+    argv5=np.arange(float(tmpStr[0]), float(tmpStr[2]), float(tmpStr[1]))
+    if argv5[0]==0:
+        argv5[0]=1
+    argv5=np.array(argv5)
+    argv5=np.reshape(argv5,(1,len(argv5))) 
 
-    effectSizes = np.array([[0.05, 0.1, 0.15,0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]])
-    sampleSizes = np.array([[1, 50, 100, 200, 250, 350, 500, 750, 1000]])
+    sampleSizes = argv4 #np.array([[1, 50, 100, 200, 250, 350, 500, 750, 1000]])
+    effectSizes = argv5 #np.array([[0.05, 0.1, 0.15,0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]])
+    
     
     ##define output metric options
     metric_opt = np.array([1, 2, 3, 4])  #see options description below
     correction_opt = np.array([1, 2, 3, 4]) #see correction options description below
     
     
-    numberreps= 10
+    numberreps= int(argv6)
     ## ## Calculat for a subset of 4 variables (less than 20 seconds on 4-core desktop for each analysis)
     diffgroups = np.array([])
     linearregression = np.array([])
     t_start = datetime.now()
-    num_cols = int(argv2)
+    num_cols = int(argv3)-int(argv2)
     if (num_cols > 0):
         diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
                 output_uncTP_ratio_iqr, output_bonfTP_ratio_iqr, output_bhTP_ratio_iqr, output_byTP_ratio_iqr, \
                 output_uncTP, output_bonfTP, output_bhTP, output_byTP \
-                = PCalc_2Group(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                = PCalc_2Group(XSRV[:,np.arange(int(argv2), int(argv3))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
         linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
                 output_uncTP_ratio_iqr_ln, output_bonfTP_ratio_iqr_ln, output_bhTP_ratio_iqr_ln, output_byTP_ratio_iqr_ln \
-                 = PCalc_Continuous(XSRV[:,np.arange(0,num_cols)],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                 = PCalc_Continuous(XSRV[:,np.arange(int(argv2), int(argv3))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
         t_end = datetime.now()
-        print 'Time collapsed: ' + str(t_end-t_start)
+        print('Time collapsed: ' + str(t_end-t_start))
    
     else:
         t_start = datetime.now()
@@ -1427,7 +1443,7 @@ def main(argv1, argv2):
                 output_uncTP_ratio_iqr_ln, output_bonfTP_ratio_iqr_ln, output_bhTP_ratio_iqr_ln, output_byTP_ratio_iqr_ln \
                 = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
         t_end = datetime.now()
-        print 'Time collapsed: ' + str(t_end-t_start)
+        print('Time collapsed: ' + str(t_end-t_start))
 
     ##diffgroups has dimension of (number of variables, 4, 10, effectsize, samplesize);
     ##number of variables is the input number of columns from the input dataset.
@@ -1735,13 +1751,51 @@ def main(argv1, argv2):
     shutil.rmtree('papy_output')
     
     ##display user information
-    print 'The output files are in the papy_output_zip.zip in the running directory'
-    print 'Please move the papy_output_zip.zip file to your work directory and unzipped it to view the output files.'
-    print 'a Python script, plotSurface.py, is included for plotting interactive surface plots for variables'
-    print 'for more details, please have a look the .zip file.'
+    print('The output files are in the papy_output_zip.zip in the running directory')
+    print('Please move the papy_output_zip.zip file to your work directory and unzipped it to view the output files.')
+    print('a Python script, plotSurface.py, is included for plotting interactive surface plots for variables')
+    print('for more details, please have a look the .zip file.')
                                                       
 if __name__=="__main__":
-    #try:
-        main(sys.argv[1], sys.argv[2])
-    #except:
-    #    print 'usage: python pa.py <data filename> <number of columns, 0 for use whole data set>'
+    ##detect python version#
+    ver = sys.version
+    if not ('2.7' in ver):
+        print('This tool currently only runs in Python 2.7. Please install Python 2.7')
+        exit(0)
+                    
+    ##start to parse input arguments
+    args = sys.argv
+    for i in range(1, len(args)):
+        print(args[i],type(args[i]),len(args[i]))
+        
+    if (len(args)<4):
+        print('too few arguments')
+        print('simple usage: python pa.py TutorialData.csv 0 8, TutorialData.csv is input test data set, can be replaced by \n \n \
+              actual data set name, 0 8 means the first 8 variables, which can be a range, e.g., 8 16 \n \n \n \
+              full usage: python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20  \n \n \
+              0:100:500 means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100 \n \n \
+              0.05:0.05:0.7 means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05 \n \n \
+              20 is an integer number of repeats. ')
+        exit(0)
+
+    if (len(args)>4):
+        tmpStr=args[4].split(':')
+        if len(tmpStr)<3:
+            print('the 4th parameter is for defining the range of sample size with interval\n \
+                  for example, python pa.py TutorialData.csv 2-9 0:50:500')
+            exit(0)
+    else:
+        args.append('0:100:501')
+        
+    if (len(args)>5):
+        tmpStr=args[5].split(':')
+        if len(tmpStr)<3:
+            print('the 5th parameter is for defining the range of effect size with interval\n \
+                  for example, python pa.py TutorialData.csv 2-9 10:50:500 0.05:0.05:0.8')
+            exit(0)
+    else:
+        args.append('0.05:0.05:0.8')
+    
+    args.append('10')                
+    print('len of args is %i'%(len(args[1:])))
+    main(args[1],args[2],args[3],args[4],args[5],args[6])
