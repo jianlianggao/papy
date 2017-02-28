@@ -357,7 +357,7 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
         ## f_multiproc(ii)
     
     ##work out number of overall results and number of power rate results
-    num_overall_results = int(round(numVars / float(cores)))
+    num_overall_results = int(round(numVars / cores))
     
     ##pass the results to output
     output = []
@@ -789,7 +789,7 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
     output = []
     
     ##work out number of overall results and number of power rate results
-    num_overall_results = int(round(numVars / float(cores)))
+    num_overall_results = int(round(numVars / cores))
     for novr in range(num_overall_results):
         output.append(output2[0][novr])
     
@@ -1377,7 +1377,7 @@ def read2array(filename):
     return dataArray
 
 
-def main(argv1, argv2, argv3, argv4, argv5, argv6): 
+def main(argv1, argv2, argv3, argv4, argv5): 
     
     ## read the data into an array;
     XSRV = read2array(argv1)
@@ -1393,22 +1393,30 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
     
     print('Input data matrix size is :' + str(rows) + ',' + str(cols))
     
+    tmpStr=argv2.split('-')
+    if len(tmpStr)>1:
+        argv2=[int(tmpStr[0]),int(tmpStr[1])+1]
+    else:
+        argv2=[0,int(argv2)]
+    #debugging
+    print(argv2[0],argv2[1])
+    
+    tmpStr=argv3.split(':')
+    argv3=range(int(tmpStr[0]), int(tmpStr[2]), int(tmpStr[1]))
+    if argv3[0]==0:
+        argv3[0]=1
+    argv3=np.array(argv3)
+    argv3=np.reshape(argv3,(1,len(argv3))) 
+        
     tmpStr=argv4.split(':')
-    argv4=range(int(tmpStr[0]), int(tmpStr[2]), int(tmpStr[1]))
+    argv4=np.arange(float(tmpStr[0]), float(tmpStr[2]), float(tmpStr[1]))
     if argv4[0]==0:
         argv4[0]=1
     argv4=np.array(argv4)
     argv4=np.reshape(argv4,(1,len(argv4))) 
-        
-    tmpStr=argv5.split(':')
-    argv5=np.arange(float(tmpStr[0]), float(tmpStr[2]), float(tmpStr[1]))
-    if argv5[0]==0:
-        argv5[0]=1
-    argv5=np.array(argv5)
-    argv5=np.reshape(argv5,(1,len(argv5))) 
 
-    sampleSizes = argv4 #np.array([[1, 50, 100, 200, 250, 350, 500, 750, 1000]])
-    effectSizes = argv5 #np.array([[0.05, 0.1, 0.15,0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]])
+    sampleSizes = argv3 #np.array([[1, 50, 100, 200, 250, 350, 500, 750, 1000]])
+    effectSizes = argv4 #np.array([[0.05, 0.1, 0.15,0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]])
     
     
     ##define output metric options
@@ -1416,20 +1424,20 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
     correction_opt = np.array([1, 2, 3, 4]) #see correction options description below
     
     
-    numberreps= int(argv6)
+    numberreps= int(argv5)
     ## ## Calculat for a subset of 4 variables (less than 20 seconds on 4-core desktop for each analysis)
     diffgroups = np.array([])
     linearregression = np.array([])
     t_start = datetime.now()
-    num_cols = int(argv3)-int(argv2)
+    num_cols = int(argv2[1])-int(argv2[0])
     if (num_cols > 0):
         diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
                 output_uncTP_ratio_iqr, output_bonfTP_ratio_iqr, output_bhTP_ratio_iqr, output_byTP_ratio_iqr, \
                 output_uncTP, output_bonfTP, output_bhTP, output_byTP \
-                = PCalc_2Group(XSRV[:,np.arange(int(argv2), int(argv3))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                = PCalc_2Group(XSRV[:,np.arange(int(argv2[0]), int(argv2[1]))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
         linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
                 output_uncTP_ratio_iqr_ln, output_bonfTP_ratio_iqr_ln, output_bhTP_ratio_iqr_ln, output_byTP_ratio_iqr_ln \
-                 = PCalc_Continuous(XSRV[:,np.arange(int(argv2), int(argv3))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                 = PCalc_Continuous(XSRV[:,np.arange(int(argv2[0]), int(argv2[1]))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
         t_end = datetime.now()
         print('Time collapsed: ' + str(t_end-t_start))
    
@@ -1768,29 +1776,29 @@ if __name__=="__main__":
     for i in range(1, len(args)):
         print(args[i],type(args[i]),len(args[i]))
         
-    if (len(args)<4):
+    if (len(args)<3):
         print('too few arguments')
-        print('simple usage: python pa.py TutorialData.csv 0 8, TutorialData.csv is input test data set, can be replaced by \n \n \
-              actual data set name, 0 8 means the first 8 variables, which can be a range, e.g., 8 16 \n \n \n \
+        print('simple usage: python pa.py TutorialData.csv 8, TutorialData.csv is input test data set, can be replaced by \n \n \
+              actual data set name, 8 means the first 8 variables, which can be a range, e.g., 8-16 \n \n \n \
               full usage: python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20  \n \n \
               0:100:500 means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100 \n \n \
               0.05:0.05:0.7 means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05 \n \n \
               20 is an integer number of repeats. ')
         exit(0)
 
-    if (len(args)>4):
-        tmpStr=args[4].split(':')
+    if (len(args)>3):
+        tmpStr=args[3].split(':')
         if len(tmpStr)<3:
-            print('the 4th parameter is for defining the range of sample size with interval\n \
+            print('the 3rd parameter is for defining the range of sample size with interval\n \
                   for example, python pa.py TutorialData.csv 2-9 0:50:500')
             exit(0)
     else:
         args.append('0:100:501')
         
-    if (len(args)>5):
-        tmpStr=args[5].split(':')
+    if (len(args)>4):
+        tmpStr=args[4].split(':')
         if len(tmpStr)<3:
-            print('the 5th parameter is for defining the range of effect size with interval\n \
+            print('the 4th parameter is for defining the range of effect size with interval\n \
                   for example, python pa.py TutorialData.csv 2-9 10:50:500 0.05:0.05:0.8')
             exit(0)
     else:
@@ -1798,4 +1806,4 @@ if __name__=="__main__":
     
     args.append('10')                
     print('len of args is %i'%(len(args[1:])))
-    main(args[1],args[2],args[3],args[4],args[5],args[6])
+    main(args[1],args[2],args[3],args[4],args[5])
