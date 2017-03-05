@@ -291,7 +291,7 @@ def simulateLogNormal(data, covType, nSamples):
 
 
 ##=======Beginning of PCalc_Continuous====================
-def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat):
+def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat,cores):
     ##If sample size bigger than number of simulated samples adjust it
     sampSizes = SampSizes
     signThreshold = SignThreshold
@@ -335,13 +335,6 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
 
     ##Simulation of a new data set based on multivariate normal distribution
     Samples, correlationMat = simulateLogNormal(data,'Estimate', nSimSamp)
-    
-    ##split Samples and correlationMat into chunk files for parallel processing
-    if multiprocessing.cpu_count()-1 <= 0:
-        cores = 1
-    else:
-        cores = multiprocessing.cpu_count()
-    
     Samples_seg = Samples
     correlationMat_seg = correlationMat
     
@@ -728,7 +721,7 @@ def randperm1(totalLen):
 ##=======End of PCalc_Continuous====================
 
 ##=======Beginning of PCalc_2Group====================
-def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat):
+def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat,cores):
     ##If sample size bigger than number of simulated samples adjust it
     ## global sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, output2
     ## global output2
@@ -773,13 +766,7 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
 
     ##Simulation of a new data set based on multivariate normal distribution
     Samples, correlationMat = simulateLogNormal(data,'Estimate', nSimSamp)
-        
-    ##split Samples and correlationMat into chunk files for parallel processing
-    if multiprocessing.cpu_count()-1 <= 0:
-        cores = 1
-    else:
-        cores = multiprocessing.cpu_count()
-        
+    
     Samples_seg = Samples
     correlationMat_seg=correlationMat
     output2=[]
@@ -1392,7 +1379,7 @@ def read2array(filename):
     return dataArray
 
 
-def main(argv1, argv2, argv3, argv4, argv5): 
+def main(argv1, argv2, argv3, argv4, argv5, argv6): 
     
     ## read the data into an array;
     XSRV = read2array(argv1)
@@ -1440,19 +1427,26 @@ def main(argv1, argv2, argv3, argv4, argv5):
     
     
     numberreps= int(argv5)
+    
+    cores = int(argv6)
+
     ## ## Calculat for a subset of 4 variables (less than 20 seconds on 4-core desktop for each analysis)
     diffgroups = np.array([])
     linearregression = np.array([])
     t_start = datetime.now()
     num_cols = int(argv2[1])-int(argv2[0])
+    ##if the number of variables is less than the request CPU cores, use number of variables as cores.
+    if (num_cols<cores):
+        cores=num_cols
+        
     if (num_cols > 0):
         diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
                 output_uncTP_ratio_iqr, output_bonfTP_ratio_iqr, output_bhTP_ratio_iqr, output_byTP_ratio_iqr, \
                 output_uncTP, output_bonfTP, output_bhTP, output_byTP \
-                = PCalc_2Group(XSRV[:,np.arange(int(argv2[0]), int(argv2[1]))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                = PCalc_2Group(XSRV[:,np.arange(int(argv2[0]), int(argv2[1]))],effectSizes, sampleSizes, 0.05, 5000, numberreps, cores)
         linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
                 output_uncTP_ratio_iqr_ln, output_bonfTP_ratio_iqr_ln, output_bhTP_ratio_iqr_ln, output_byTP_ratio_iqr_ln \
-                 = PCalc_Continuous(XSRV[:,np.arange(int(argv2[0]), int(argv2[1]))],effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                 = PCalc_Continuous(XSRV[:,np.arange(int(argv2[0]), int(argv2[1]))],effectSizes, sampleSizes, 0.05, 5000, numberreps, cores)
         t_end = datetime.now()
         print('Time collapsed: ' + str(t_end-t_start))
    
@@ -1461,10 +1455,10 @@ def main(argv1, argv2, argv3, argv4, argv5):
         diffgroups, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
                 output_uncTP_ratio_iqr, output_bonfTP_ratio_iqr, output_bhTP_ratio_iqr, output_byTP_ratio_iqr, \
                 output_uncTP, output_bonfTP, output_bhTP, output_byTP \
-                = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                = PCalc_2Group(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps, cores)
         linearregression, output_uncTP_ratio_median_ln, output_bonfTP_ratio_median_ln, output_bhTP_ratio_median_ln, output_byTP_ratio_median_ln,\
                 output_uncTP_ratio_iqr_ln, output_bonfTP_ratio_iqr_ln, output_bhTP_ratio_iqr_ln, output_byTP_ratio_iqr_ln \
-                = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps)
+                = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps, cores)
         t_end = datetime.now()
         print('Time collapsed: ' + str(t_end-t_start))
 
@@ -1795,10 +1789,11 @@ if __name__=="__main__":
         print('too few arguments')
         print('simple usage: python pa.py TutorialData.csv 8, TutorialData.csv is input test data set, can be replaced by \n \n \
               actual data set name, 8 means the first 8 variables, which can be a range, e.g., 8-16 \n \n \n \
-              full usage: python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20  \n \n \
+              full usage: python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20 4 \n \n \
               0:100:500 means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100 \n \n \
               0.05:0.05:0.7 means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05 \n \n \
-              20 is an integer number of repeats. ')
+              20 is an integer number of repeats. \n \n \
+              4 is an integer number as number of CPU cores to use. ')
         exit(0)
 
     if (len(args)>3):
@@ -1819,6 +1814,33 @@ if __name__=="__main__":
     else:
         args.append('0.05:0.05:0.8')
     
-    args.append('10')                
+    if (len(args)>5):
+        print('')
+    else:
+        args.append('10') 
+    
+    if (len(args)>6):
+        tmpInt=int(args[6])
+        if type(tmpInt).__name__=='int':
+            if multiprocessing.cpu_count()-1 <= 0:
+                cores = 1
+            else:
+                cores = multiprocessing.cpu_count()
+                if tmpInt>cores:
+                    args[6]=str(cores)
+                    print('You machine does not have enough cores as you request, \n \
+                          the maximum number of cores - %i - will be used instead' %(cores))
+        else:
+            print('the 6th parameter is for defining the number of CPU cores to use\n \
+                  for example, python pa.py TutorialData.csv 2-9 10:50:500 0.05:0.05:0.8 10 4')
+            exit(0)
+    else:
+        if multiprocessing.cpu_count()-1 <= 0:
+            cores = 1
+        else:
+            cores = multiprocessing.cpu_count()   
+        args.append(str(cores)) 
+        
+                        
     print('len of args is %i'%(len(args[1:])))
-    main(args[1],args[2],args[3],args[4],args[5])
+    main(args[1],args[2],args[3],args[4],args[5],args[6])
