@@ -352,17 +352,25 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     ##with all effect sizes and sample sizes; 
     output_allsteps_tmp=[]
     
-    output2 = Parallel(n_jobs=cores)(delayed(f_multiproc1)(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, ii) for ii in range(cores))            #n_jobs=-1 means using all CPUs or any other number>1 to specify the number of CPUs to use
+    ## output2 = Parallel(n_jobs=cores)(delayed(f_multiproc1)(sampSizes, signThreshold, effectSizes, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, ii) for ii in range(cores))            #n_jobs=-1 means using all CPUs or any other number>1 to specify the number of CPUs to use
     ## for ii in range(numVars):       # non parallelized loop
         ## f_multiproc(ii)
-    
-    ##work out number of overall results and number of power rate results
-    num_overall_results = int(round(numVars / cores))
+    pool = multiprocessing.Pool(processes=cores)
+    output2 = [pool.apply_async(f_multiproc,args=(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, wk)) for wk in range(cores)]
+    output2 = [p.get(None) for p in output2]
+    output3 = list()
+    # Unpack results
+    for instanceOutput in output2:
+        for item in instanceOutput:
+            output3.append(item)
     
     ##pass the results to output
     output = []
+    
+    ##work out number of overall results and number of power rate results
+    num_overall_results = int(round(numVars / cores))
     for novr in range(num_overall_results):
-        output.append(output2[0][novr])
+        output.append(output3[novr])
     
     ##pass Power TPR results to output variables
     output_uncTP = []
@@ -370,28 +378,28 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     output_bhTP = []
     output_byTP = []
     
-    output_uncTP = np.array(output2[0][num_overall_results])
-    output_bonfTP = np.array(output2[0][num_overall_results+1])
-    output_bhTP = np.array(output2[0][num_overall_results+2])
-    output_byTP = np.array(output2[0][num_overall_results+3])
+    output_uncTP = np.array(output3[num_overall_results])
+    output_bonfTP = np.array(output3[num_overall_results+1])
+    output_bhTP = np.array(output3[num_overall_results+2])
+    output_byTP = np.array(output3[num_overall_results+3])
     
     if cores>1:
         for ii in range(1, cores-1):
             for novr in range(num_overall_results):
-                output.append(output2[ii][novr])
+                output.append(output3[ii*(num_overall_results+4)+novr])
             
-            output_uncTP = np.append(output_uncTP, output2[ii][num_overall_results],axis=2)
-            output_bonfTP = np.append(output_bonfTP, output2[ii][num_overall_results+1],axis=2)
-            output_bhTP = np.append(output_bhTP, output2[ii][num_overall_results+2],axis=2)
-            output_byTP = np.append(output_byTP, output2[ii][num_overall_results+3],axis=2)
+            output_uncTP = np.append(output_uncTP, output3[ii*(num_overall_results+4)+num_overall_results],axis=2)
+            output_bonfTP = np.append(output_bonfTP, output3[ii*(num_overall_results+4)+num_overall_results+1],axis=2)
+            output_bhTP = np.append(output_bhTP, output3[ii*(num_overall_results+4)+num_overall_results+2],axis=2)
+            output_byTP = np.append(output_byTP, output3[ii*(num_overall_results+4)+num_overall_results+3],axis=2)
         
         rest_num_overall_results = numVars - num_overall_results * (cores-1)
         for novr in range(rest_num_overall_results):
-                output.append(output2[cores-1][novr])
-        output_uncTP = np.append(output_uncTP, output2[cores-1][rest_num_overall_results],axis=2)
-        output_bonfTP = np.append(output_bonfTP, output2[cores-1][rest_num_overall_results+1],axis=2)
-        output_bhTP = np.append(output_bhTP, output2[cores-1][rest_num_overall_results+2],axis=2)
-        output_byTP = np.append(output_byTP, output2[cores-1][rest_num_overall_results+3],axis=2)        
+            output.append(output3[(cores-1)*(num_overall_results+4)+novr]) 
+        output_uncTP = np.append(output_uncTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results],axis=2)
+        output_bonfTP = np.append(output_bonfTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results+1],axis=2)
+        output_bhTP = np.append(output_bhTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results+2],axis=2)
+        output_byTP = np.append(output_byTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results+3],axis=2)        
     
     output = np.array(output)    
     ##for the mean proportion of number of variables achieve the power; and the std
@@ -779,10 +787,17 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
     ##define an array for storing the results in each step of repeat for all variables
     ##with all effect sizes and sample sizes; 
     output_allsteps_tmp=[]
-    #debug - using another multiporcessing method to run f_multiproc
-    #pool = multiprocessing.Pool(processes=cores)
-    #output2 = [pool.apply_async(f_multiproc,args=(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, wk)) for wk in range(cores)]
-    output2 = Parallel(n_jobs=cores)(delayed(f_multiproc)(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, ii) for ii in range(cores))            #n_jobs=-1 means using all CPUs or any other number>1 to specify the number of CPUs to use
+    ## #debug - using another multiporcessing method to run f_multiproc
+    pool = multiprocessing.Pool(processes=cores)
+    output2 = [pool.apply_async(f_multiproc,args=(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, wk)) for wk in range(cores)]
+    output2 = [p.get(None) for p in output2]
+    output3 = list()
+    # Unpack results
+    for instanceOutput in output2:
+        for item in instanceOutput:
+            output3.append(item)
+    
+    ## output2 = Parallel(n_jobs=cores)(delayed(f_multiproc)(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, cols, cores, ii) for ii in range(cores))            #n_jobs=-1 means using all CPUs or any other number>1 to specify the number of CPUs to use
     ## for ii in range(numVars): ##for non-parallel running
             ## f_multiproc(ii)
     ##pass the results to output
@@ -791,7 +806,7 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
     ##work out number of overall results and number of power rate results
     num_overall_results = int(round(numVars / cores))
     for novr in range(num_overall_results):
-        output.append(output2[0][novr])
+        output.append(output3[novr])
     
     ##pass Power TPR results to output variables
     output_uncTP = []
@@ -799,28 +814,28 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat)
     output_bhTP = []
     output_byTP = []
     
-    output_uncTP = np.array(output2[0][num_overall_results])
-    output_bonfTP = np.array(output2[0][num_overall_results+1])
-    output_bhTP = np.array(output2[0][num_overall_results+2])
-    output_byTP = np.array(output2[0][num_overall_results+3])
+    output_uncTP = np.array(output3[num_overall_results])
+    output_bonfTP = np.array(output3[num_overall_results+1])
+    output_bhTP = np.array(output3[num_overall_results+2])
+    output_byTP = np.array(output3[num_overall_results+3])
     
     if cores>1:
         for ii in range(1, cores-1):
             for novr in range(num_overall_results):
-                output.append(output2[ii][novr])
+                output.append(output3[ii*(num_overall_results+4)+novr])
             
-            output_uncTP = np.append(output_uncTP, output2[ii][num_overall_results],axis=2)
-            output_bonfTP = np.append(output_bonfTP, output2[ii][num_overall_results+1],axis=2)
-            output_bhTP = np.append(output_bhTP, output2[ii][num_overall_results+2],axis=2)
-            output_byTP = np.append(output_byTP, output2[ii][num_overall_results+3],axis=2)
+            output_uncTP = np.append(output_uncTP, output3[ii*(num_overall_results+4)+num_overall_results],axis=2)
+            output_bonfTP = np.append(output_bonfTP, output3[ii*(num_overall_results+4)+num_overall_results+1],axis=2)
+            output_bhTP = np.append(output_bhTP, output3[ii*(num_overall_results+4)+num_overall_results+2],axis=2)
+            output_byTP = np.append(output_byTP, output3[ii*(num_overall_results+4)+num_overall_results+3],axis=2)
         
         rest_num_overall_results = numVars - num_overall_results * (cores-1)
         for novr in range(rest_num_overall_results):
-            output.append(output2[cores-1][novr]) 
-        output_uncTP = np.append(output_uncTP, output2[cores-1][rest_num_overall_results],axis=2)
-        output_bonfTP = np.append(output_bonfTP, output2[cores-1][rest_num_overall_results+1],axis=2)
-        output_bhTP = np.append(output_bhTP, output2[cores-1][rest_num_overall_results+2],axis=2)
-        output_byTP = np.append(output_byTP, output2[cores-1][rest_num_overall_results+3],axis=2)
+            output.append(output3[(cores-1)*(num_overall_results+4)+novr]) 
+        output_uncTP = np.append(output_uncTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results],axis=2)
+        output_bonfTP = np.append(output_bonfTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results+1],axis=2)
+        output_bhTP = np.append(output_bhTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results+2],axis=2)
+        output_byTP = np.append(output_byTP, output3[(cores-1)*(num_overall_results+4)+rest_num_overall_results+3],axis=2)
     
     
     output = np.array(output)    
