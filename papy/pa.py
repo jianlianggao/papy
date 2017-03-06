@@ -9,12 +9,13 @@ import os,sys,csv,inspect,dis,os.path,random,multiprocessing,getopt
 import numpy as np
 import scipy.stats as scistats
 import statsmodels.formula.api as sm                    #for linear regression
-import matplotlib.pyplot as plt
 import shutil                                           #for creating zip files
 from math import fabs,floor,ceil,log,exp
 from datetime import datetime
-from joblib import Parallel, delayed                    #for Parallel computing
-from statsmodels import robust                          #for work out median absolute deviation
+##--not use following modules anymore
+##import matplotlib.pyplot as plt
+##from joblib import Parallel, delayed                    #for Parallel computing
+##from statsmodels import robust                          #for work out median absolute deviation
 
 ## For 3d plots. This import is necessary to have 3D plotting below
 ##from mpl_toolkits.mplot3d import Axes3D
@@ -412,25 +413,47 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_uncTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
             output_uncTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_uncTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            try:
+                output_uncTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_uncTP_ratio_iqr[currEff][currSamp] = q75-q25
+
+
             
             tmp_median_array = np.zeros(nRepeats)
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_bonfTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
             output_bonfTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_bonfTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            try:
+                output_bonfTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_bonfTP_ratio_iqr[currEff][currSamp] = q75-q25
+
+
             
             tmp_median_array = np.zeros(nRepeats)
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_bhTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
             output_bhTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_bhTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            try:
+                output_bhTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_bhTP_ratio_iqr[currEff][currSamp] = q75-q25
+
             
             tmp_median_array = np.zeros(nRepeats)
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_byTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)            
             output_byTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_byTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            try:
+                output_byTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_byTP_ratio_iqr[currEff][currSamp] = q75-q25
+
           
     try:
         return output, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
@@ -843,26 +866,43 @@ def PCalc_2Group(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRepeat,
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_uncTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
             output_uncTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_uncTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            try:
+                output_uncTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_uncTP_ratio_iqr[currEff][currSamp] = q75-q25
             
             tmp_median_array = np.zeros(nRepeats)
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_bonfTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
             output_bonfTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_bonfTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            try:
+                output_bonfTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_bonfTP_ratio_iqr[currEff][currSamp] = q75-q25
+
             
             tmp_median_array = np.zeros(nRepeats)
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_bhTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)
             output_bhTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_bhTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            try:
+                output_bhTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_bhTP_ratio_iqr[currEff][currSamp] = q75-q25
+
             
             tmp_median_array = np.zeros(nRepeats)
             for currStep in range(0, nRepeats):
                 tmp_median_array[currStep] = (sum(1 for x in output_byTP[currEff][currSamp][:,currStep] if x>0.8))/float(numVars)            
             output_byTP_ratio_median[currEff][currSamp] = np.median(tmp_median_array)
-            output_byTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
-            
+            try:
+                output_byTP_ratio_iqr[currEff][currSamp] = scistats.iqr(tmp_median_array, axis=0, interpolation='midpoint')
+            except AttributeError:
+                q75, q25 = np.percentile(tmp_median_array, [75, 25], axis=0)
+                output_byTP_ratio_iqr[currEff][currSamp] = q75-q25
     try:
         return output, output_uncTP_ratio_median, output_bonfTP_ratio_median, output_bhTP_ratio_median, output_byTP_ratio_median,\
                 output_uncTP_ratio_iqr, output_bonfTP_ratio_iqr, output_bhTP_ratio_iqr, output_byTP_ratio_iqr, \
@@ -1782,8 +1822,8 @@ if __name__=="__main__":
                     
     ##start to parse input arguments
     args = sys.argv
-    for i in range(1, len(args)):
-        print(args[i],type(args[i]),len(args[i]))
+    ## for i in range(1, len(args)):
+        ## print(args[i],type(args[i]),len(args[i]))
         
     if (len(args)<3):
         print('too few arguments')
@@ -1842,5 +1882,5 @@ if __name__=="__main__":
         args.append(str(cores)) 
         
                         
-    print('len of args is %i'%(len(args[1:])))
+    ## print('len of args is %i'%(len(args[1:])))
     main(args[1],args[2],args[3],args[4],args[5],args[6])
