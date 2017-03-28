@@ -937,7 +937,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
         storeVar = np.zeros((4,10, nEffSizes, nSampSizes))                            
     ##define uncStruct, bonfStruct, bhStruct, byStruct  -- dictionary data 
     ## the key's order, if retrieving by index, is FP,TN,FD,FN,SFD,STP,STN,SFN,SFP,TP
-    ##STP-- State for True Positive prediction; SFP -- State for False Positive prediction
+    ##STP-- Std of True Positive prediction; SFP -- std of False Positive prediction
     uncStruct = {'TP':np.zeros((nEffSizes, nSampSizes)),'FP':np.zeros((nEffSizes, nSampSizes)),'TN':np.zeros((nEffSizes, nSampSizes)),\
                  'FN':np.zeros((nEffSizes, nSampSizes)),'FD':np.zeros((nEffSizes, nSampSizes)),'STP':np.zeros((nEffSizes, nSampSizes)),\
                  'SFP':np.zeros((nEffSizes, nSampSizes)),'STN':np.zeros((nEffSizes, nSampSizes)),'SFN':np.zeros((nEffSizes, nSampSizes)),\
