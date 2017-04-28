@@ -1800,7 +1800,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
     
     ##copy plotSurface.py to papy_output folder
     ##for plotting interactive surface plots for the variables separately
-    shutil.copy2('plotSurface.py','papy_output')
+    ##shutil.copy2('plotSurface.py','papy_output')
     ##create a zip file on the output folder
     shutil.make_archive('papy_output_zip', 'zip', 'papy_output')
     
