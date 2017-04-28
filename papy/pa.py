@@ -1803,6 +1803,11 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
     shutil.copy2('plotSurface.py','papy_output')
     ##create a zip file on the output folder
     shutil.make_archive('papy_output_zip', 'zip', 'papy_output')
+    
+    ##copy some files for user viewing in results folder
+    if not os.path.exists('results'):
+        os.makedirs('results')
+    shutil.copy2('papy_output/plot-power-rate-byCorrection-diffgroups.html','results')
             
     ##delete the papy_output folder
     shutil.rmtree('papy_output')
