@@ -1810,7 +1810,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
     shutil.copy2('papy_output/plot-power-rate-byCorrection-diffgroups.html','results')
     shutil.copy2('papy_output/plot-slice-power-rate-byCorrection-diffgroups.html','results')
     shutil.copy2('papy_output/plot-slice-power-rate-byCorrection-diffgroups-eff.html','results')
-    shutil.copy2('papy_output/plot-power-noCorrection-diffgroups.html','results')
+    shutil.copy2('papy_output/plot-power-rate-noCorrection-diffgroups.html','results')
     shutil.copy2('papy_output/plot-slice-power-rate-noCorrection-diffgroups.html','results')
     shutil.copy2('papy_output/plot-slice-power-rate-noCorrection-diffgroups-eff.html','results')
     
