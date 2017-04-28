@@ -1808,7 +1808,12 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
     if not os.path.exists('results'):
         os.makedirs('results')
     shutil.copy2('papy_output/plot-power-rate-byCorrection-diffgroups.html','results')
-            
+    shutil.copy2('papy_output/plot-slice-power-rate-byCorrection-diffgroups.html','results')
+    shutil.copy2('papy_output/plot-slice-power-rate-byCorrection-diffgroups-eff.html','results')
+    shutil.copy2('papy_output/plot-power-noCorrection-diffgroups.html','results')
+    shutil.copy2('papy_output/plot-slice-power-rate-noCorrection-diffgroups.html','results')
+    shutil.copy2('papy_output/plot-slice-power-rate-noCorrection-diffgroups-eff.html','results')
+    
     ##delete the papy_output folder
     shutil.rmtree('papy_output')
     
