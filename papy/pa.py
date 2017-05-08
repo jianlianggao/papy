@@ -1488,7 +1488,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
                 output_uncTP_ratio_iqr_ln, output_bonfTP_ratio_iqr_ln, output_bhTP_ratio_iqr_ln, output_byTP_ratio_iqr_ln \
                  = PCalc_Continuous(XSRV[:,np.arange(int(argv2[0]), int(argv2[1]))],effectSizes, sampleSizes, 0.05, 5000, numberreps, cores)
         t_end = datetime.now()
-        print('Time collapsed: ' + str(t_end-t_start))
+        print('Time elapsed: ' + str(t_end-t_start))
    
     else:
         t_start = datetime.now()
@@ -1500,7 +1500,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6):
                 output_uncTP_ratio_iqr_ln, output_bonfTP_ratio_iqr_ln, output_bhTP_ratio_iqr_ln, output_byTP_ratio_iqr_ln \
                 = PCalc_Continuous(XSRV,effectSizes, sampleSizes, 0.05, 5000, numberreps, cores)
         t_end = datetime.now()
-        print('Time collapsed: ' + str(t_end-t_start))
+        print('Time elapsed: ' + str(t_end-t_start))
 
     ##diffgroups has dimension of (number of variables, 4, 10, effectsize, samplesize);
     ##number of variables is the input number of columns from the input dataset.
