@@ -121,16 +121,16 @@ def iSlicesPlot(X, Y, Error_y, svfilename, plot_title, x_caption, y_caption, tra
     
     ##dictionary of y_caption
     if y_caption == 'tpn':
-        y_caption = 'True Positive Rate'
+        y_caption = 'Proportion'
         plot_title = plot_title+'-(no correction)'
     if y_caption == 'tpb':
-        y_caption = 'True Positive Rate'
+        y_caption = 'Proportion'
         plot_title = plot_title+'-(Bonferroni correction)'
     if y_caption == 'tpbh':
-        y_caption = 'True Positive Rate'
+        y_caption = 'Proportion'
         plot_title = plot_title+'-(Benjamini-Hochberg correction)'
     if y_caption == 'tpby':
-        y_caption = 'True Positive Rate'
+        y_caption = 'Proportion'
         plot_title = plot_title+'-(Benjamini-Yekutieli correction)'
     
     if y_caption == 'fpn':
@@ -937,7 +937,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
         storeVar = np.zeros((4,10, nEffSizes, nSampSizes))                            
     ##define uncStruct, bonfStruct, bhStruct, byStruct  -- dictionary data 
     ## the key's order, if retrieving by index, is FP,TN,FD,FN,SFD,STP,STN,SFN,SFP,TP
-    ##STP-- State for True Positive prediction; SFP -- State for False Positive prediction
+    ##STP-- Standard deviation for True Positive prediction; SFP -- Standard deviation for False Positive prediction
     uncStruct = {'TP':np.zeros((nEffSizes, nSampSizes)),'FP':np.zeros((nEffSizes, nSampSizes)),'TN':np.zeros((nEffSizes, nSampSizes)),\
                  'FN':np.zeros((nEffSizes, nSampSizes)),'FD':np.zeros((nEffSizes, nSampSizes)),'STP':np.zeros((nEffSizes, nSampSizes)),\
                  'SFP':np.zeros((nEffSizes, nSampSizes)),'STN':np.zeros((nEffSizes, nSampSizes)),'SFN':np.zeros((nEffSizes, nSampSizes)),\
@@ -1544,7 +1544,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
                              ['fdn', 'fdb', 'fdbh', 'fdby'],['fnn', 'fnb', 'fnbh', 'fnby'], \
                              ['sfdn', 'sfdb', 'sfdbh', 'sfdby'], ['stpn', 'stpb', 'stpbh', 'stpby'], \
                              ['stnn', 'stnb', 'stnbh', 'stnby'], ['sfnn', 'sfnb', 'sfnbh', 'sfnby'], \
-                             ['sfpn', 'sfpdb', 'sfpbh', 'sfpby'], ['tpn', 'tpb', 'tpbh', 'tpby'] ])    
+                             ['sfpn', 'sfpb', 'sfpbh', 'sfpby'], ['tpn', 'tpb', 'tpbh', 'tpby'] ])    
     ##save the effect sizes and sample sizes
     file_handle = file('papy_output/effect_n_sample_sizes.txt', 'a')
     np.savetxt(file_handle, np.array(['effect sizes']), fmt='%s')
@@ -1557,6 +1557,10 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
     
     for jj in range(0, sv_filenames.shape[0]):
         for kk in range(0, sv_filenames.shape[1]):
+            #if (jj==2 and kk > 0):
+            #    break;
+            #if (jj==4 and kk > 0):
+            #    break;
             if (outcome_type==0 or outcome_type==2):
                 file_handle = file('papy_output/diffgroups-%s.csv'%(sv_filenames[jj][kk]), 'a')
                 ##write the title line with columns "variables, Sample Sizes (Effect Sizes as columns), and Effect Sizes"
@@ -1774,6 +1778,10 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
     ##sv_filenames.shape[1] is the dimension of correction options
     for jj in range(0, sv_filenames.shape[0]):
         for kk in range(0, sv_filenames.shape[1]):
+            #if (jj==2 and kk > 0):
+            #    break;
+            #if (jj==4 and kk > 0):
+            #    break;
             if (outcome_type==0 or outcome_type==2):
                 temp_diffgroups_array=[]                
                 mean_diffgroups_array=[]
