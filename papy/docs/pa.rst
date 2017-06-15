@@ -1,0 +1,4 @@
+PAPY
+====
+
+.. automodule:: pa
