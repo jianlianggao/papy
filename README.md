@@ -73,6 +73,10 @@ For direct docker usage:
 docker run docker-registry.phenomenal-h2020.eu/phnmnl/papy ...
 ```
 
+## Help and Documentation
+
+Please check the "docs" folder for detail. 
+
 ## Publications
 
 - Benjamin, J. Blaise, Goncalo Correia, et al., Power Analysis and Sample Size Determination in Metabolic Phenotyping. Bioinformatics, 2016. 88(10): p. 5179-5188.
