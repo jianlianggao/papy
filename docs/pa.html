@@ -1,0 +1,423 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PAPY &#8212; papy 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to PAPY’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-pa">
+<span id="papy"></span><h1>PAPY<a class="headerlink" href="#module-pa" title="Permalink to this headline">¶</a></h1>
+<p>Power Analysis (Python) tool
+Developed by Dr. Goncalo Correia and Dr Jianliang Gao
+Imperial College London
+2016</p>
+<p>simple usage: python pa.py TutorialData.csv 8</p>
+<blockquote>
+<div><p>“TutorialData.csv” is input test data set, can be replaced by actual data set name.</p>
+<p>“8” means the first 8 variables, which can be a range, e.g., 8-16</p>
+</div></blockquote>
+<p>full usage: python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20 0 4</p>
+<blockquote>
+<div><p>“0:100:500” (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100.</p>
+<p>“0.05:0.05:0.7” (default value) means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05.</p>
+<p>“20” is an integer number of repeats. Default value is 10.</p>
+<p>“0” is the default input for working for classification only. Please choose 1 to work on regression only or 2 to work on both.</p>
+<p>“4” is an integer number as number of CPU cores to use. By default is to use all available cores.</p>
+</div></blockquote>
+<dl class="function">
+<dt id="pa.iSurfacePlot">
+<code class="descclassname">pa.</code><code class="descname">iSurfacePlot</code><span class="sig-paren">(</span><em>output</em>, <em>svfilename</em>, <em>variable</em>, <em>metric</em>, <em>correction</em>, <em>samplsizes</em>, <em>sizeeff</em>, <em>nreps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#iSurfacePlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.iSurfacePlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is for plotting interactive 3D surface plot for mean of all variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – array for plotting.2D numpy array</li>
+<li><strong>svfilename</strong> (<em>String</em>) – filename for saving the corresponding plot.</li>
+<li><strong>variable</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – variable index nubmer. for plotting mean of all variables, as the size is 1, therefore use 1 as input parameter.</li>
+<li><strong>metric</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – metric (confusion matrix, ‘TP’, ‘TF’ etc) index nubmer. for plotting mean of all variables, as the size is 1, therefore use 1 as input parameter.</li>
+<li><strong>correction</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – correction methods (no correction, Bonferroni, Benjamini-Hochberg, Benjamini-Yekutieli index nubmer. for plotting mean of all variables, as the size is 1, therefore use 1 as input parameter.</li>
+<li><strong>samplsizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – sample size matrix, numpy array 1 x n</li>
+<li><strong>sizeeff</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – effect size matrix, numpy array 1 x n</li>
+<li><strong>nreps</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of repeats</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.iSlicesPlot">
+<code class="descclassname">pa.</code><code class="descname">iSlicesPlot</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>Error_y</em>, <em>svfilename</em>, <em>plot_title</em>, <em>x_caption</em>, <em>y_caption</em>, <em>trace_label</em>, <em>trace_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#iSlicesPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.iSlicesPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>For plotting slices from surface plots. Interactive plots with error bars.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>X</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – matrix for x-axis. either sample size or effect size. Use 1 x n numpy array.</li>
+<li><strong>Y</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – matrix of mean proportion of variables reach power&gt;threshold.</li>
+<li><strong>Error_y</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – a matrix contains standard deviation of proportion of variables reach power&gt;threshold within the repeats.</li>
+<li><strong>svfilename</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) – filename for saving plots in the running folder.</li>
+<li><strong>plot_title</strong> (<em>String</em>) – Title for the plot</li>
+<li><strong>x_caption</strong> (<em>String</em>) – Caption for x-axis</li>
+<li><strong>y_caption</strong> (<em>String</em>) – Caption for y-axis</li>
+<li><strong>trace_label</strong> (<em>String</em>) – for each trace to show relevant txt.</li>
+<li><strong>trace_num</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – for trace label when mouse cursor moving along plot to show which line is which</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.iSurfacePlotTPR">
+<code class="descclassname">pa.</code><code class="descname">iSurfacePlotTPR</code><span class="sig-paren">(</span><em>output</em>, <em>svfilename</em>, <em>correction</em>, <em>samplsizes</em>, <em>sizeeff</em>, <em>nreps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#iSurfacePlotTPR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.iSurfacePlotTPR" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is for plotting interactive 3D surface plot for mean of proportion of all variables with power&gt;0.8 accross all repeats</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – array for plotting.2D numpy array.</li>
+<li><strong>svfilename</strong> (<em>String</em>) – filename for saving the corresponding plot.</li>
+<li><strong>correction</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – correction methods (no correction, Bonferroni, Benjamini-Hochberg, Benjamini-Yekutieli index nubmer. for plotting mean of all variables, as the size is 1, therefore use 1 as input parameter.</li>
+<li><strong>samplsizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – sample size matrix, numpy array 1 x n.</li>
+<li><strong>sizeeff</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – effect size matrix, numpy array 1 x n</li>
+<li><strong>nreps</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of repeats</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.simulateLogNormal">
+<code class="descclassname">pa.</code><code class="descname">simulateLogNormal</code><span class="sig-paren">(</span><em>data</em>, <em>covType</em>, <em>nSamples</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#simulateLogNormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.simulateLogNormal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Using log(10) of input matrix to generate normally distributed multivariate matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – data matrix input</li>
+<li><strong>covType</strong> (<em>String</em>) – Estimate a covariance matrix or Extract/construct a diagonal array from given variance.</li>
+<li><strong>nSamples</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of simulated samples.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Return simulation data and correlation matrix</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.PCalc_Continuous">
+<code class="descclassname">pa.</code><code class="descname">PCalc_Continuous</code><span class="sig-paren">(</span><em>data</em>, <em>EffectSizes</em>, <em>SampSizes</em>, <em>SignThreshold</em>, <em>nSimSamp</em>, <em>nRepeat</em>, <em>cores</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#PCalc_Continuous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.PCalc_Continuous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the confusion matrix with/without correction methods by regression.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Test Matrix. numpy array.</li>
+<li><strong>EffectSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – effect size matrix, numpy array 1 x n</li>
+<li><strong>SampSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Sample size matrix, numpy array 1 x n</li>
+<li><strong>SignThreshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Threshold of significance level.This tool uses 0.05.</li>
+<li><strong>nSimSamp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of simulated samples. This tool uses 5000.</li>
+<li><strong>nRepeat</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of repeats in the calculation of confusion matrix using simulated data.By default it is set to 10.</li>
+<li><strong>cores</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of CPU cores to be used for parallel.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.f_multiproc_cont">
+<code class="descclassname">pa.</code><code class="descname">f_multiproc_cont</code><span class="sig-paren">(</span><em>sampSizes</em>, <em>signThreshold</em>, <em>effectSizes</em>, <em>numVars</em>, <em>nRepeats</em>, <em>nSampSizes</em>, <em>nEffSizes</em>, <em>Samples_seg</em>, <em>correlationMat_seg</em>, <em>cols</em>, <em>cores</em>, <em>currCore</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#f_multiproc_cont"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.f_multiproc_cont" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lauch parallel computing for PCalc_Continuous.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sampSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Sample size matrix, numpy array 1 x n.</li>
+<li><strong>signThreshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Threshold of significance level.This tool uses 0.05.</li>
+<li><strong>effectSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Effect size matrix, numpy array 1 x n.</li>
+<li><strong>numVars</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of variables in current CPU core.</li>
+<li><strong>nRepeats</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of repeats in the calculation of confusion matrix using simulated data.By default it is set to 10.</li>
+<li><strong>nSampSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – length of Sample size matrix.</li>
+<li><strong>nEffSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – length of effect size matrix.</li>
+<li><strong>Samples_seg</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Segment of simulated sample data. Numpy array.</li>
+<li><strong>correlationMat_seg</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Segment of correlation matrix on the simulated sample data. Numpy array.</li>
+<li><strong>cols</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of variables to be used for calculation.</li>
+<li><strong>cores</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of CPU cores to be used.</li>
+<li><strong>currCore</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – current CPU core in use.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.PCalc_2Group">
+<code class="descclassname">pa.</code><code class="descname">PCalc_2Group</code><span class="sig-paren">(</span><em>data</em>, <em>EffectSizes</em>, <em>SampSizes</em>, <em>SignThreshold</em>, <em>nSimSamp</em>, <em>nRepeat</em>, <em>cores</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#PCalc_2Group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.PCalc_2Group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the confusion matrix with/without correction methods by classification.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Test Matrix. numpy array.</li>
+<li><strong>EffectSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – effect size matrix, numpy array 1 x n</li>
+<li><strong>SampSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Sample size matrix, numpy array 1 x n</li>
+<li><strong>SignThreshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Threshold of significance level.This tool uses 0.05.</li>
+<li><strong>nSimSamp</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of simulated samples. This tool uses 5000.</li>
+<li><strong>nRepeat</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of repeats in the calculation of confusion matrix using simulated data.By default it is set to 10.</li>
+<li><strong>cores</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of CPU cores to be used for parallel.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.f_multiproc">
+<code class="descclassname">pa.</code><code class="descname">f_multiproc</code><span class="sig-paren">(</span><em>sampSizes</em>, <em>signThreshold</em>, <em>effectSizes</em>, <em>numVars</em>, <em>nRepeats</em>, <em>nSampSizes</em>, <em>nEffSizes</em>, <em>Samples_seg</em>, <em>correlationMat_seg</em>, <em>cols</em>, <em>cores</em>, <em>currCore</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#f_multiproc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.f_multiproc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lauch parallel computing for PCalc_2Group.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sampSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Sample size matrix, numpy array 1 x n.</li>
+<li><strong>signThreshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Threshold of significance level.This tool uses 0.05.</li>
+<li><strong>effectSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Effect size matrix, numpy array 1 x n.</li>
+<li><strong>numVars</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of variables in current core.</li>
+<li><strong>nRepeats</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of repeats in the calculation of confusion matrix using simulated data.By default it is set to 10.</li>
+<li><strong>nSampSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – length of Sample size matrix.</li>
+<li><strong>nEffSizes</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – length of effect size matrix.</li>
+<li><strong>Samples_seg</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Segment of simulated sample data. Numpy array.</li>
+<li><strong>correlationMat_seg</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – Segment of correlation matrix on the simulated sample data. Numpy array.</li>
+<li><strong>cols</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of variables to be used for calculation.</li>
+<li><strong>cores</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – number of CPU cores to be used.</li>
+<li><strong>currCore</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – current CPU core in use.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.randperm">
+<code class="descclassname">pa.</code><code class="descname">randperm</code><span class="sig-paren">(</span><em>totalLen</em>, <em>subLen</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#randperm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.randperm" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is for random permuation and pick up the sub array according to the specified size</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>totalLen</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Total length.</li>
+<li><strong>subLen</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) – Sub length.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.expecting">
+<code class="descclassname">pa.</code><code class="descname">expecting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#expecting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.expecting" title="Permalink to this definition">¶</a></dt>
+<dd><p>function expecting is for detecting the number of outputs; written by Sami Hangaslammi
+Return how many values the caller is expecting</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.fdr_bh">
+<code class="descclassname">pa.</code><code class="descname">fdr_bh</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#fdr_bh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.fdr_bh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function false discovery rate by Benjamini-Hochberg correction</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pa.calcConfMatrixUniv">
+<code class="descclassname">pa.</code><code class="descname">calcConfMatrixUniv</code><span class="sig-paren">(</span><em>p</em>, <em>corrVector</em>, <em>signThreshold</em>, <em>corrThresh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pa.html#calcConfMatrixUniv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pa.calcConfMatrixUniv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function of calculating confusion matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>p</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – p_value matrix. numpy array</li>
+<li><strong>corrVector</strong> (<a class="reference external" href="https://docs.python.org/2/library/array.html#module-array" title="(in Python v2.7)"><em>array</em></a>) – correlation vector.</li>
+<li><strong>signThreshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – Significance threshold.</li>
+<li><strong>corrThresh</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) – power level</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">papy</a></h1>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=jianlianggao&repo=papy&type=star&v=2&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PAPY</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, J Gao.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/pa.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/jianlianggao/papy" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
