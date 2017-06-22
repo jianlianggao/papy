@@ -420,6 +420,7 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     else:
         cols = 1
 
+
         ##Number of variables
     numVars = cols
     nRepeats = nRepeat
@@ -447,10 +448,15 @@ def PCalc_Continuous(data, EffectSizes, SampSizes, SignThreshold, nSimSamp, nRep
     ##with all effect sizes and sample sizes;
     output_allsteps_tmp = []
 
+    #debug
+    #cores = 1
+
     pool = multiprocessing.Pool(processes=cores)
     output2 = [pool.apply_async(f_multiproc_cont, args=( \
         sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampSizes, nEffSizes, Samples_seg, correlationMat_seg, \
         cols, cores, wk)) for wk in range(cores)]
+
+
     output2 = [p.get(None) for p in output2]
     output3 = list()
     # Unpack results
@@ -667,7 +673,7 @@ def f_multiproc_cont(sampSizes, signThreshold, effectSizes, numVars, nRepeats, n
             storeVar = np.zeros((4, 10, nEffSizes, nSampSizes))
 
         for currEff in range(0, nEffSizes):
-            b1 = np.zeros((cols, 1))
+            b1 = np.zeros((numVars, 1))
             b1[currVar][0] = effectSizes[0][currEff]
 
             for currSampSize in range(0, nSampSizes):
@@ -714,7 +720,10 @@ def f_multiproc_cont(sampSizes, signThreshold, effectSizes, numVars, nRepeats, n
                     #noise = noiseLevel * np.random.normal(0, 1, sampSizes[0][currSampSize])
                     #noise = np.reshape(noise, (len(noise),1))
 
-                    Y = SelSamples[:, np.array([currVar])] * b1[currVar][0]
+                    Y = SelSamples[:, np.array([currVar+offSet])] * b1[currVar][0]
+                    #debug
+                    print(Y.shape)
+                    print("\n")
                     Y = Y + noise
 
                     p = np.zeros((1, cols))
@@ -731,7 +740,7 @@ def f_multiproc_cont(sampSizes, signThreshold, effectSizes, numVars, nRepeats, n
                         p[0][i] = stats_result.f_pvalue
 
                     pUnc = p  ##pUnc and p have 1xnumVars elements
-                    pBonf = p * numVars
+                    pBonf = p * cols
 
                     h1, crit_p, adj_ci_cvrg, pBY = fdr_bh(p, 0.05, 'dep')
                     h1, crit_p, adj_ci_cvrg, pBH = fdr_bh(p, 0.05, 'pdep')
