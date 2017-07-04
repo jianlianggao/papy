@@ -1,28 +1,27 @@
+#!/usr/bin/env python
 """
 Power Analysis (Python) tool
 Developed by Dr. Goncalo Correia and Dr Jianliang Gao
 Imperial College London
 2016
 
-simple usage: python pa.py TutorialData.csv 8
+simple usage- python pa.py TutorialData.csv 8
 
-         "TutorialData.csv" is input test data set, can be replaced by actual data set name.
+         TutorialData.csv is input test data set, can be replaced by actual data set name.
 
-         "8" means the first 8 variables, which can be a range, e.g., 8-16
+         8 means the first 8 variables, which can be a range, e.g., 8-16
 
-full usage: python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20 0 4
+full usage- python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20 0 4
 
-        "0:100:500" (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100.
+        0:100:500 (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100.
 
-        "0.05:0.05:0.7" (default value) means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05.
+        0.05:0.05:0.7 (default value) means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05.
 
-        "20" is an integer number of repeats. Default value is 10.
+        20 is an integer number of repeats. Default value is 10.
 
-        "0" is the default input for working for classification only. Please choose 1 to work on regression only or 2 to work on both.
+        0 is the default input for working for classification only. Please choose 1 to work on regression only or 2 to work on both.
 
-        "4" is an integer number as number of CPU cores to use. By default is to use all available cores.
-
-
+        4 is an integer number as number of CPU cores to use. By default is to use all available cores.
 """
 import os, sys, csv, inspect, dis, os.path, random, multiprocessing, getopt
 import numpy as np
