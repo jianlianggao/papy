@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Power Analysis (Python) tool
 Developed by Dr. Goncalo Correia and Dr Jianliang Gao
@@ -6,21 +7,21 @@ Imperial College London
 
 simple usage: python pa.py TutorialData.csv 8
 
-         "TutorialData.csv" is input test data set, can be replaced by actual data set name.
+         TutorialData.csv is input test data set, can be replaced by actual data set name.
 
-         "8" means the first 8 variables, which can be a range, e.g., 8-16
+         8 means the first 8 variables, which can be a range, e.g., 8-16
 
 full usage: python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20 0 4
 
-        "0:100:500" (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100.
+        0:100:500 (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100.
 
-        "0.05:0.05:0.7" (default value) means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05.
+        0.05:0.05:0.7 (default value) means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05.
 
-        "20" is an integer number of repeats. Default value is 10.
+        20 is an integer number of repeats. Default value is 10.
 
-        "0" is the default input for working for classification only. Please choose 1 to work on regression only or 2 to work on both.
+        0 is the default input for working for classification only. Please choose 1 to work on regression only or 2 to work on both.
 
-        "4" is an integer number as number of CPU cores to use. By default is to use all available cores.
+        4 is an integer number as number of CPU cores to use. By default is to use all available cores.
 
 
 """
@@ -722,8 +723,8 @@ def f_multiproc_cont(sampSizes, signThreshold, effectSizes, numVars, nRepeats, n
 
                     Y = SelSamples[:, np.array([currVar+offSet])] * b1[currVar][0]
                     #debug
-                    print(Y.shape)
-                    print("\n")
+                    #print(Y.shape)
+                    #print("\n")
                     Y = Y + noise
 
                     p = np.zeros((1, cols))
@@ -1844,9 +1845,14 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
     np.savetxt(file_handle, effectSizes, delimiter=",", fmt='%.3f')
     np.savetxt(file_handle, np.array(['sample sizes']), fmt='%s')
     np.savetxt(file_handle, sampleSizes, delimiter=",", fmt='%.3f')
+    np.savetxt(file_handle, np.array(['input variable range:%i-%i'%(argv2[0],argv2[1])]), fmt='%s')
+    np.savetxt(file_handle, np.array(['number of repeats:%i'%(numberreps)]), fmt='%s')
     file_handle.close()
 
     ##save files. jj- Metric options; kk- Correction options; ii- Variable number; for example: jj=1, kk=1 mean tpn-- true positive no correction.
+
+    #debug
+    print(argv2[0])
 
     for jj in range(0, sv_filenames.shape[0]):
         for kk in range(0, sv_filenames.shape[1]):
@@ -1865,10 +1871,24 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
                     np.savetxt(file_handle, np.insert(diffgroups[ii][kk][jj], [0], np.insert(effectSizes.T, [0],
                                                                                              np.ones(
                                                                                                  [effectSizes.shape[1],
-                                                                                                  1]) * (ii + 1),
+                                                                                                  1]) * (ii + argv2[0]),
                                                                                              axis=1), axis=1),
                                delimiter=",", fmt='%.5f')
                 file_handle.close()
+
+                #save median information of the proportion of number of variables over power 0.8 during iteration
+                output_median_files=['output_uncTP_ratio_median', 'output_bonfTP_ratio_median', 'output_bhTP_ratio_median', 'output_byTP_ratio_median']
+                for ll in output_median_files:
+                    filename='papy_output/%s.csv'%(ll)
+                    if not os.path.exists(filename):
+                        file_handle1=file(filename,'a')
+                        title_str1 = np.append(np.array([['Effect Sizes (Sample Sizes in Columns)']]),
+                                          sampleSizes.astype('str'), axis=1)
+                        np.savetxt(file_handle1, title_str1, delimiter=',', fmt='%s')
+                        file_handle1.close()
+                    file_handle1 = file(filename, 'a')
+                    np.savetxt(file_handle1, np.insert(eval(ll), [0], effectSizes.T, axis=1),delimiter=",", fmt='%.5f')
+                    file_handle1.close()
             if (outcome_type == 1 or outcome_type == 2):
                 file_handle = file('papy_output/linearregression-%s.csv' % (sv_filenames[jj][kk]), 'a')
                 ##write the title line with columns "variables, Sample Sizes (Effect Sizes as columns), and Effect Sizes"
@@ -1882,9 +1902,24 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
                                                                                                                effectSizes.shape[
                                                                                                                    1],
                                                                                                                1]) * (
-                                                                                                   ii + 1), axis=1),
+                                                                                                   ii + argv2[0]), axis=1),
                                                       axis=1), delimiter=",", fmt='%.5f')
                 file_handle.close()
+                # save median information of the proportion of number of variables over power 0.8 during iteration
+                output_median_files = ['output_uncTP_ratio_median_ln', 'output_bonfTP_ratio_median_ln',
+                                       'output_bhTP_ratio_median_ln', 'output_byTP_ratio_median_ln']
+
+                for ll in output_median_files:
+                    filename='papy_output/%s.csv' % (ll)
+                    if not os.path.exists(filename):
+                        file_handle1 = file(filename, 'a')
+                        title_str1 = np.append(np.array([['Effect Sizes (Sample Sizes in Columns)']]),
+                                          sampleSizes.astype('str'), axis=1)
+                        np.savetxt(file_handle1, title_str1, delimiter=',', fmt='%s')
+                        file_handle1.close()
+                    file_handle1 = file(filename, 'a')
+                    np.savetxt(file_handle1, np.insert(eval(ll), [0], effectSizes.T, axis=1), delimiter=",", fmt='%.5f')
+                    file_handle1.close()
 
     if (outcome_type == 0 or outcome_type == 2):
         ##plot the surfaces of power rate acrossing the combination of effectSize and SampleSize (classfied)
@@ -2110,7 +2145,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
 
             if (outcome_type == 0 or outcome_type == 2):
                 temp_diffgroups_array = np.array(temp_diffgroups_array)
-                mean_diffgroups_array = np.mean(temp_diffgroups_array, axis=0)
+                mean_diffgroups_array = np.nanmean(temp_diffgroups_array, axis=0)
                 # for calculating standard deviation
                 std_diffgroups_array = np.std(temp_diffgroups_array, axis=0)
 
@@ -2120,7 +2155,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
 
             if (outcome_type == 1 or outcome_type == 2):
                 temp_linearregression_array = np.array(temp_linearregression_array)
-                mean_linearregression_array = np.mean(temp_linearregression_array, axis=0)
+                mean_linearregression_array = np.nanmean(temp_linearregression_array, axis=0)
                 # for calculating standard deviation
                 std_linearregression_array = np.std(temp_linearregression_array, axis=0)
 
@@ -2136,7 +2171,8 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
             if (outcome_type == 1 or outcome_type == 2):
                 for ii in range(0, 3):
                     mean_linearregression_array = np.expand_dims(mean_linearregression_array, axis=0)
-
+            #debug
+            print(mean_diffgroups_array.shape)
             if (outcome_type == 0 or outcome_type == 2):
                 iSurfacePlot(mean_diffgroups_array, 'papy_output/plot-mean-diffgroups-%s.html' % (sv_filenames[jj][kk]),
                              1, 1, 1, sampleSizes, effectSizes, numberreps)
@@ -2149,7 +2185,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
     ##for plotting interactive surface plots for the variables separately
     # shutil.copy2('plotSurface.py','papy_output')
     ##create a zip file on the output folder
-    shutil.make_archive('papy_output_zip', 'zip', 'papy_output')
+    #shutil.make_archive('papy_output_zip', 'zip', 'papy_output')
 
     ##copy some files for user viewing in results folder
     if not os.path.exists('results'):
@@ -2169,7 +2205,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
         shutil.copy2('papy_output/plot-slice-power-rate-noCorrection-ln.html', 'results')
         shutil.copy2('papy_output/plot-slice-power-rate-noCorrection-ln-eff.html', 'results')
         ##delete the papy_output folder
-    shutil.rmtree('papy_output')
+    #shutil.rmtree('papy_output')
 
     ##display user information
     print('The output files are in the papy_output_zip.zip in the running directory')
