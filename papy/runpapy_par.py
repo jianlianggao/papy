@@ -255,7 +255,7 @@ def runpapy_par(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
     os.chdir(argv2)
     shutil.copy2("../pa.py", "./pa.py")
 
-    os.system("python pa.py ../%s%s.csv %s %s %s %s %s %s"%(argv1,argv2,argv2, argv3, argv4,argv5, argv6, argv7 ))
+    os.system("python pa.py %s%s.csv %s %s %s %s %s %s"%(argv1,argv2,argv2, argv3, argv4,argv5, argv6, argv7 ))
     os.chdir("../")
 if __name__ == "__main__":
     #get input parameters
@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
     if (len(args) < 3):
         print('too few arguments')
-        print('simple usage: python runpapy_par.py TutorialData 1-8, TutorialData1-8.csv is input test data set, \n \n \
+        print('simple usage: python runpapy_par.py ../TutorialData 1-8, <path to>/TutorialData1-8.csv is input test data set, \n \n \
               1-8 means the range of variables, \n \n \n \
               full usage: python pa.py TutorialData 1-8 0:100:500 0.05:0.05:0.7 20 0 4 \n \n \
               0:100:500 (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100 \n \n \
