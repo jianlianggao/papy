@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, csv, inspect, dis, os.path, shutil
+import os, sys, os.path, shutil, multiprocessing
 import numpy as np
 import pandas as pd
 from math import floor
@@ -246,21 +246,107 @@ def reorder(list1):
     return(newlist)
 
 
-def runpapy_par(argv1):
+def runpapy_par(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
     # create a separate running folder
-    if not os.path.exists(argv1):
-        os.makedirs(argv1)
-    os.chdir(argv1)
+    if (os.path.exists(argv2) and (os.listdir(argv2))):
+        shutil.rmtree(argv2)
+    if not os.path.exists(argv2):
+        os.makedirs(argv2)
+    os.chdir(argv2)
     shutil.copy2("../pa.py", "./pa.py")
 
-    os.system("python ../pa.py ../TutorialData%s.csv %s 10:50:500 0.05:0.05:0.8 10 2"%(argv1,argv1))
-
+    os.system("python pa.py ../%s%s.csv %s %s %s %s %s %s"%(argv1,argv2,argv2, argv3, argv4,argv5, argv6, argv7 ))
+    os.chdir("../")
 if __name__ == "__main__":
     #get input parameters
     args = sys.argv
 
-    # runpapy_par(args[1]) #run pa.py in separate folders
+    if (len(args) < 3):
+        print('too few arguments')
+        print('simple usage: python runpapy_par.py TutorialData 1-8, TutorialData1-8.csv is input test data set, \n \n \
+              1-8 means the range of variables, \n \n \n \
+              full usage: python pa.py TutorialData 1-8 0:100:500 0.05:0.05:0.7 20 0 4 \n \n \
+              0:100:500 (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100 \n \n \
+              0.05:0.05:0.7 (default value) means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05 \n \n \
+              20 is an integer number of repeats. Default value is 10. \n \n \
+              0 is the default input for working for classification only. Please choose 1 to work on regression only or 2 to work on both. \n \n \
+              4 is an integer number as number of CPU cores to use. By default is to use all available cores. ')
+        exit(0)
 
+    if (len(args) > 3):
+        tmpStr = args[3].split(':')
+        if len(tmpStr) < 3:
+            print('The 3rd parameter is for defining the range of sample size with interval\n \
+                  for example, python runpapy_par.py TutorialData 1-8 0:50:500')
+            exit(0)
+    else:
+        args.append('0:100:501')
+
+    if (len(args) > 4):
+        tmpStr = args[4].split(':')
+        if len(tmpStr) < 3:
+            print('The 4th parameter is for defining the range of effect size with interval\n \
+                  for example,python runpapy_par.py TutorialData 1-8 10:50:500 0.05:0.05:0.8')
+            exit(0)
+    else:
+        args.append('0.05:0.05:0.8')
+
+    if (len(args) > 5):
+        print('')
+    else:
+        args.append('10')
+
+        # for calculating diffgroups, or linear regression or both
+    if (len(args) > 6):
+        tmpInt = int(args[6])
+        if type(tmpInt).__name__ == 'int':
+            if (tmpInt == 0):
+                print('Only work on classification (discrete)!')
+            if (tmpInt == 1):
+                print('Only work on regression (continuous)!')
+            if (tmpInt == 2):
+                print('Work on both classification and regression!')
+            if (tmpInt < 0 or tmpInt > 2):
+                print('The 6th parameter is for dealing with outcome variables\n \
+                      please choose a number among 0, 1 and 2 \n \
+                      0 - for work on classification outcome only \n \
+                      1 - for work on regression outcome only \n \
+                      2 - for work on both')
+        else:
+            print('The 6th parameter is for dealing with outcome variables\n \
+                      please choose a number among 0, 1 and 2 \n \
+                      0 - for work on classification outcome only \n \
+                      1 - for work on regression outcome only \n \
+                      2 - for work on both')
+            exit(0)
+    else:
+        args.append('2')
+
+    # for using number of cores of CPU
+    if (len(args) > 7):
+        tmpInt = int(args[7])
+        if type(tmpInt).__name__ == 'int':
+            if multiprocessing.cpu_count() - 1 <= 0:
+                cores = 1
+            else:
+                cores = multiprocessing.cpu_count()
+                if tmpInt > cores:
+                    args[7] = str(cores)
+                    print('Your machine does not have enough cores as you request, \n \
+                          the maximum number of cores - %i - will be used instead' % (cores))
+        else:
+            print('The 7th parameter is for defining the number of CPU cores to use\n \
+                  for example, python runpapy_par.py TutorialData 1-8 10:50:500 0.05:0.05:0.8 10 4')
+            exit(0)
+    else:
+        if multiprocessing.cpu_count() - 1 <= 0:
+            cores = 1
+        else:
+            cores = multiprocessing.cpu_count()
+        args.append(str(cores))
+    runpapy_par(args[1],args[2], args[3], args[4], args[5], args[6], args[7]) #run pa.py in separate folders
+
+    #collect data from subfolders and calculate median and mean
     subdirs=SubDirPath(".")
     print(type(subdirs))
     newlist=patternFilter(subdirs)
@@ -270,6 +356,8 @@ if __name__ == "__main__":
     print(newlist1)
 
     output_dir="results"
+    if (os.path.exists(output_dir) and os.listdir(output_dir)):
+        shutil.rmtree(output_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -285,20 +373,22 @@ if __name__ == "__main__":
             savefilename = "%s/%s%s.csv" % (output_dir, mm, op)
             for ll in newlist1:
                 srcfilename="%s/papy_output/%s%s.csv"%(ll,mm,op)
-                if not os.path.exists(savefilename):
-                    shutil.copy2(srcfilename, savefilename)
-                else:
-                    tmpData=pd.read_csv(srcfilename)
-                    file_handle = file(savefilename,'a')
-                    np.savetxt(file_handle,np.array(tmpData), delimiter=",", fmt='%.5f')
-                    file_handle.close()
-            tmpData1=pd.read_csv(savefilename)
-            cols=tmpData1.shape[1]
-            col_names=tmpData1.columns[range(1,cols)]
-            tmpData1=tmpData1[col_names]
-            tmpData2=tmpData1.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).mean()
-            savefilename1="%s/mean-%s%s.csv" % (output_dir, mm, op)
-            tmpData2.to_csv(savefilename1, index=False)
+                if os.path.exists(srcfilename):
+                    if not os.path.exists(savefilename):
+                        shutil.copy2(srcfilename, savefilename)
+                    else:
+                        tmpData=pd.read_csv(srcfilename)
+                        file_handle = file(savefilename,'a')
+                        np.savetxt(file_handle,np.array(tmpData), delimiter=",", fmt='%.5f')
+                        file_handle.close()
+            if os.path.exists(savefilename):
+                tmpData1=pd.read_csv(savefilename)
+                cols=tmpData1.shape[1]
+                col_names=tmpData1.columns[range(1,cols)]
+                tmpData1=tmpData1[col_names]
+                tmpData2=tmpData1.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).mean()
+                savefilename1="%s/mean-%s%s.csv" % (output_dir, mm, op)
+                tmpData2.to_csv(savefilename1, index=False)
 
     diff_median_files = ['output_uncTP_ratio_median', 'output_bonfTP_ratio_median', 'output_bhTP_ratio_median',
                            'output_byTP_ratio_median']
