@@ -261,11 +261,12 @@ if __name__ == "__main__":
     #get input parameters
     args = sys.argv
 
-    if (len(args) < 3):
+    if (len(args) < 4):
         print('too few arguments')
-        print('simple usage: python runpapy_par.py ../TutorialData 1-8, <path to>/TutorialData1-8.csv is input test data set, \n \n \
+        print('simple usage: python runpapy_par.py <path to output dir> ../TutorialData 1-8, <path to>/TutorialData1-8.csv is input test data set, \n \n \
               1-8 means the range of variables, \n \n \n \
-              full usage: python pa.py TutorialData 1-8 0:100:500 0.05:0.05:0.7 20 0 4 \n \n \
+              full usage: python pa.py results TutorialData 1-8 0:100:500 0.05:0.05:0.7 20 0 4 \n \n \
+              results is output directory. \n \n \
               0:100:500 (default value) means the range of sample sizes from 0 to 500 (not inclusive) with interval of 100 \n \n \
               0.05:0.05:0.7 (default value) means the range of effect sizes from 0.05 to 0.7 (not inclusive) with interval of 0.05 \n \n \
               20 is an integer number of repeats. Default value is 10. \n \n \
@@ -273,32 +274,32 @@ if __name__ == "__main__":
               4 is an integer number as number of CPU cores to use. By default is to use all available cores. ')
         exit(0)
 
-    if (len(args) > 3):
-        tmpStr = args[3].split(':')
+    if (len(args) > 4):
+        tmpStr = args[4].split(':')
         if len(tmpStr) < 3:
-            print('The 3rd parameter is for defining the range of sample size with interval\n \
-                  for example, python runpapy_par.py TutorialData 1-8 0:50:500')
+            print('The 4rd parameter is for defining the range of sample size with interval\n \
+                  for example, python runpapy_par.py results TutorialData 1-8 0:50:500')
             exit(0)
     else:
         args.append('0:100:501')
 
-    if (len(args) > 4):
-        tmpStr = args[4].split(':')
+    if (len(args) > 5):
+        tmpStr = args[5].split(':')
         if len(tmpStr) < 3:
-            print('The 4th parameter is for defining the range of effect size with interval\n \
-                  for example,python runpapy_par.py TutorialData 1-8 10:50:500 0.05:0.05:0.8')
+            print('The 5th parameter is for defining the range of effect size with interval\n \
+                  for example,python runpapy_par.py results TutorialData 1-8 10:50:500 0.05:0.05:0.8')
             exit(0)
     else:
         args.append('0.05:0.05:0.8')
 
-    if (len(args) > 5):
+    if (len(args) > 6):
         print('')
     else:
         args.append('10')
 
         # for calculating diffgroups, or linear regression or both
-    if (len(args) > 6):
-        tmpInt = int(args[6])
+    if (len(args) > 7):
+        tmpInt = int(args[7])
         if type(tmpInt).__name__ == 'int':
             if (tmpInt == 0):
                 print('Only work on classification (discrete)!')
@@ -307,13 +308,13 @@ if __name__ == "__main__":
             if (tmpInt == 2):
                 print('Work on both classification and regression!')
             if (tmpInt < 0 or tmpInt > 2):
-                print('The 6th parameter is for dealing with outcome variables\n \
+                print('The 7th parameter is for dealing with outcome variables\n \
                       please choose a number among 0, 1 and 2 \n \
                       0 - for work on classification outcome only \n \
                       1 - for work on regression outcome only \n \
                       2 - for work on both')
         else:
-            print('The 6th parameter is for dealing with outcome variables\n \
+            print('The 7th parameter is for dealing with outcome variables\n \
                       please choose a number among 0, 1 and 2 \n \
                       0 - for work on classification outcome only \n \
                       1 - for work on regression outcome only \n \
@@ -323,20 +324,20 @@ if __name__ == "__main__":
         args.append('2')
 
     # for using number of cores of CPU
-    if (len(args) > 7):
-        tmpInt = int(args[7])
+    if (len(args) > 8):
+        tmpInt = int(args[8])
         if type(tmpInt).__name__ == 'int':
             if multiprocessing.cpu_count() - 1 <= 0:
                 cores = 1
             else:
                 cores = multiprocessing.cpu_count()
                 if tmpInt > cores:
-                    args[7] = str(cores)
+                    args[8] = str(cores)
                     print('Your machine does not have enough cores as you request, \n \
                           the maximum number of cores - %i - will be used instead' % (cores))
         else:
-            print('The 7th parameter is for defining the number of CPU cores to use\n \
-                  for example, python runpapy_par.py TutorialData 1-8 10:50:500 0.05:0.05:0.8 10 4')
+            print('The 8th parameter is for defining the number of CPU cores to use\n \
+                  for example, python runpapy_par.py results TutorialData 1-8 10:50:500 0.05:0.05:0.8 10 4')
             exit(0)
     else:
         if multiprocessing.cpu_count() - 1 <= 0:
@@ -344,7 +345,7 @@ if __name__ == "__main__":
         else:
             cores = multiprocessing.cpu_count()
         args.append(str(cores))
-    runpapy_par(args[1],args[2], args[3], args[4], args[5], args[6], args[7]) #run pa.py in separate folders
+    runpapy_par(args[2], args[3], args[4], args[5], args[6], args[7], args[8]) #run pa.py in separate folders
 
     #collect data from subfolders and calculate median and mean
     subdirs=SubDirPath(".")
@@ -355,7 +356,7 @@ if __name__ == "__main__":
     newlist1=reorder(newlist)
     print(newlist1)
 
-    output_dir="results"
+    output_dir=args[1]
     if (os.path.exists(output_dir) and os.listdir(output_dir)):
         shutil.rmtree(output_dir)
     if not os.path.exists(output_dir):
