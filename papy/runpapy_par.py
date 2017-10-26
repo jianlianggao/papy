@@ -357,8 +357,6 @@ if __name__ == "__main__":
     print(newlist1)
 
     output_dir=args[1]
-    if (os.path.exists(output_dir) and os.listdir(output_dir)):
-        shutil.rmtree(output_dir)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
