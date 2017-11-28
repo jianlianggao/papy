@@ -252,9 +252,9 @@ def runpapy_par(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
         shutil.rmtree(argv2)
     if not os.path.exists(argv2):
         os.makedirs(argv2)
+    
     os.chdir(argv2)
     shutil.copy2("../pa.py", "./pa.py")
-
     os.system("python pa.py %s%s.csv %s %s %s %s %s %s"%(argv1,argv2,argv2, argv3, argv4,argv5, argv6, argv7 ))
     os.chdir("../")
 if __name__ == "__main__":
@@ -497,3 +497,7 @@ if __name__ == "__main__":
                         'Proportion of Variables with Power (True Positive)> 0.8 -(%s)' % (corr_type[index]), \
                         'Effect Size', 'Proportion', 'Sample Size=', sampleSizes[:, slice_cols])
         index = index + 1
+    #write a file to indicate the code is finished.
+    with open("%s/complete.txt" % (args[3]) ,'w') as f:
+	f.write('test is done')
+    
