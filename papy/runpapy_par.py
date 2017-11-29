@@ -246,15 +246,16 @@ def reorder(list1):
     return(newlist)
 
 
-def runpapy_par(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
+def runpapy_par(argv0, argv1, argv2, argv3, argv4, argv5, argv6, argv7):
     # create a separate running folder
-    if (os.path.exists(argv2) and (os.listdir(argv2))):
-        shutil.rmtree(argv2)
-    if not os.path.exists(argv2):
-        os.makedirs(argv2)
+    tmpDir="%s/%s"%(argv0,argv2)
+    if (os.path.exists(tmpDir) and (os.listdir(tmpDir))):
+        shutil.rmtree(tmpDir)
+    if not os.path.exists(tmpDir):
+        os.makedirs(tmpDir)
     
-    os.chdir(argv2)
-    shutil.copy2("../pa.py", "./pa.py")
+    os.chdir(tmpDir)
+    shutil.copy2("/usr/local/bin/pa.py", "./pa.py")
     os.system("python pa.py %s%s.csv %s %s %s %s %s %s"%(argv1,argv2,argv2, argv3, argv4,argv5, argv6, argv7 ))
     os.chdir("../")
 if __name__ == "__main__":
@@ -345,7 +346,12 @@ if __name__ == "__main__":
         else:
             cores = multiprocessing.cpu_count()
         args.append(str(cores))
-    runpapy_par(args[2], args[3], args[4], args[5], args[6], args[7], args[8]) #run pa.py in separate folders
+
+    output_dir=args[1]
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    runpapy_par(output_dir,args[2], args[3], args[4], args[5], args[6], args[7], args[8]) #run pa.py in separate folders
 
     #collect data from subfolders and calculate median and mean
     subdirs=SubDirPath(".")
@@ -356,10 +362,7 @@ if __name__ == "__main__":
     newlist1=reorder(newlist)
     print(newlist1)
 
-    output_dir=args[1]
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
+    
     pa_methods=['diffgroups-','linearregression-']
     pa_opts = ['fpn', 'fpb', 'fpbh', 'fpby','tnn', 'tnb', 'tnbh', 'tnby', \
                              'fdn', 'fdb', 'fdbh', 'fdby', 'fnn', 'fnb', 'fnbh', 'fnby', \
