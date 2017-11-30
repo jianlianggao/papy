@@ -353,153 +353,153 @@ if __name__ == "__main__":
 
     runpapy_par(output_dir,args[2], args[3], args[4], args[5], args[6], args[7], args[8]) #run pa.py in separate folders
 
-    #collect data from subfolders and calculate median and mean
-    subdirs=SubDirPath(".")
-    print(type(subdirs))
-    newlist=patternFilter(subdirs)
-    print(newlist)
-
-    newlist1=reorder(newlist)
-    print(newlist1)
-
-    
-    pa_methods=['diffgroups-','linearregression-']
-    pa_opts = ['fpn', 'fpb', 'fpbh', 'fpby','tnn', 'tnb', 'tnbh', 'tnby', \
-                             'fdn', 'fdb', 'fdbh', 'fdby', 'fnn', 'fnb', 'fnbh', 'fnby', \
-                             'sfdn', 'sfdb', 'sfdbh', 'sfdby', 'stpn', 'stpb', 'stpbh', 'stpby', \
-                             'stnn', 'stnb', 'stnbh', 'stnby', 'sfnn', 'sfnb', 'sfnbh', 'sfnby', \
-                             'sfpn', 'sfpb', 'sfpbh', 'sfpby', 'tpn', 'tpb', 'tpbh', 'tpby']
-
-    for mm in pa_methods:
-        for op in pa_opts:
-            savefilename = "%s/%s%s.csv" % (output_dir, mm, op)
-            for ll in newlist1:
-                srcfilename="%s/papy_output/%s%s.csv"%(ll,mm,op)
-                if os.path.exists(srcfilename):
-                    if not os.path.exists(savefilename):
-                        shutil.copy2(srcfilename, savefilename)
-                    else:
-                        tmpData=pd.read_csv(srcfilename)
-                        file_handle = file(savefilename,'a')
-                        np.savetxt(file_handle,np.array(tmpData), delimiter=",", fmt='%.5f')
-                        file_handle.close()
-            if os.path.exists(savefilename):
-                tmpData1=pd.read_csv(savefilename)
-                cols=tmpData1.shape[1]
-                col_names=tmpData1.columns[range(1,cols)]
-                tmpData1=tmpData1[col_names]
-                tmpData2=tmpData1.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).mean()
-                savefilename1="%s/mean-%s%s.csv" % (output_dir, mm, op)
-                tmpData2.to_csv(savefilename1, index=False)
-
-    diff_median_files = ['output_uncTP_ratio_median', 'output_bonfTP_ratio_median', 'output_bhTP_ratio_median',
-                           'output_byTP_ratio_median']
-    ln_median_files = ['output_uncTP_ratio_median_ln', 'output_bonfTP_ratio_median_ln',
-                           'output_bhTP_ratio_median_ln', 'output_byTP_ratio_median_ln']
-
-    for ff in diff_median_files:
-        diff_median_tmp = pd.DataFrame()
-        for ll in newlist1:
-            srcfilename="%s/papy_output/%s.csv"%(ll,ff)
-            if os.path.exists(srcfilename):
-                tmp=pd.read_csv(srcfilename)
-                diff_median_tmp=diff_median_tmp.append(tmp)
-                #print(diff_median_tmp.size)
-        if not diff_median_tmp.size==0:
-            diff_median_tmp = diff_median_tmp.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).median()
-            savefilename1="%s/%s.csv"%(output_dir, ff)
-            diff_median_tmp.to_csv(savefilename1, index=False)
-    for ff in ln_median_files:
-        ln_median_tmp = pd.DataFrame()
-        for ll in newlist1:
-            srcfilename="%s/papy_output/%s.csv"%(ll,ff)
-            if os.path.exists(srcfilename):
-                tmp = pd.read_csv(srcfilename)
-                ln_median_tmp=ln_median_tmp.append(tmp)
-        if not ln_median_tmp.size==0:
-            ln_median_tmp = ln_median_tmp.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).median()
-            savefilename1="%s/%s.csv"%(output_dir, ff)
-            ln_median_tmp.to_csv(savefilename1, index=False)
-    #plot surface plot for mean of power calculation
-    for mm in pa_methods:
-        for op in pa_opts:
-            file_to_plot="%s/mean-%s%s.csv" % (output_dir, mm, op)
-            if os.path.exists(file_to_plot):
-                tmpData=pd.read_csv(file_to_plot)
-                data_to_plot=np.array(tmpData[tmpData.columns[1:]])
-                data_to_plot = np.expand_dims(data_to_plot,axis=0)
-                data_to_plot = np.expand_dims(data_to_plot, axis=0)
-                data_to_plot = np.expand_dims(data_to_plot, axis=0)
-                titles=tmpData.columns.values
-                sampleSizes = titles[1:].astype('int')
-                sampleSizes = np.expand_dims(sampleSizes, axis=0)
-                effectSizes = np.array(tmpData[tmpData.columns[0]])
-                effectSizes = np.expand_dims(effectSizes, axis=0)
-                iSurfacePlot(data_to_plot,"%s/plot-mean-%s%s.html" % (output_dir, mm, op), 1, 1, 1, sampleSizes, effectSizes)
-    #plot proportion of power > 0.8
-    output_plot=['power-rate-noCorrection-diffgroups','power-rate-bonfCorrection-diffgroups', \
-                 'power-rate-bhCorrection-diffgroups','power-rate-byCorrection-diffgroups']
-    corr_type=['no correction','Bonferroni correction','Benjamini-Hochberg correction','Benjamini-Yekutieli correction']
-    index=0
-    for ff in diff_median_files:
-        file_to_plot="%s/%s.csv"%(output_dir, ff)
-        if os.path.exists(file_to_plot):
-            tmpData = pd.read_csv(file_to_plot)
-            data_to_plot = np.array(tmpData[tmpData.columns[1:]])
-            titles = tmpData.columns.values
-            sampleSizes = titles[1:].astype('int')
-            sampleSizes = np.expand_dims(sampleSizes, axis=0)
-            effectSizes = np.array(tmpData[tmpData.columns[0]])
-            effectSizes = np.expand_dims(effectSizes, axis=0)
-            iSurfacePlotTPR(data_to_plot, '%s/plot-%s.html'%(output_dir,output_plot[index]), corr_type[index], sampleSizes, effectSizes)
-            slice_rows = np.array([1, int(floor(effectSizes.shape[1] / 2)), effectSizes.shape[1] - 2])
-            Y_temp = []
-            for sl in slice_rows:
-                Y_temp.append(data_to_plot[sl, :])
-            iSlicesPlot(sampleSizes[0], Y_temp, \
-                        '%s/plot-slice-%s.html'%(output_dir,output_plot[index]), \
-                        'Proportion of Variables with Power (True Positive)> 0.8 -(%s)'%(corr_type[index]), \
-                        'Sample Size', 'Proportion', 'Effect Size=', effectSizes[:, slice_rows])
-            slice_cols = np.array([1, int(floor(sampleSizes.shape[1] / 2)), sampleSizes.shape[1] - 2])
-            Y_temp = []
-            for sl in slice_cols:
-                Y_temp.append(data_to_plot[:,sl])
-            iSlicesPlot(effectSizes[0], Y_temp, \
-                        '%s/plot-slice-%s-eff.html'%(output_dir,output_plot[index]), \
-                        'Proportion of Variables with Power (True Positive)> 0.8 -(%s)'%(corr_type[index]), \
-                        'Effect Size', 'Proportion', 'Sample Size=', sampleSizes[:, slice_cols])
-        index=index+1
-
-    index = 0
-    for ff in ln_median_files:
-        file_to_plot = "%s/%s.csv" % (output_dir, ff)
-        if os.path.exists(file_to_plot):
-            tmpData = pd.read_csv(file_to_plot)
-            data_to_plot = np.array(tmpData[tmpData.columns[1:]])
-            titles = tmpData.columns.values
-            sampleSizes = titles[1:].astype('int')
-            sampleSizes = np.expand_dims(sampleSizes, axis=0)
-            effectSizes = np.array(tmpData[tmpData.columns[0]])
-            effectSizes = np.expand_dims(effectSizes, axis=0)
-            iSurfacePlotTPR(data_to_plot, '%s/plot-%s-linearregression.html' % (output_dir, output_plot[index]), corr_type[index],
-                            sampleSizes, effectSizes)
-            slice_rows = np.array([1, int(floor(effectSizes.shape[1] / 2)), effectSizes.shape[1] - 2])
-            Y_temp = []
-            for sl in slice_rows:
-                Y_temp.append(data_to_plot[sl, :])
-            iSlicesPlot(sampleSizes[0], Y_temp, \
-                        '%s/plot-slice-%s-linearregression.html' % (output_dir, output_plot[index]), \
-                        'Proportion of Variables with Power (True Positive)> 0.8 -(%s)' % (corr_type[index]), \
-                        'Sample Size', 'Proportion', 'Effect Size=', effectSizes[:, slice_rows])
-            slice_cols = np.array([1, int(floor(sampleSizes.shape[1] / 2)), sampleSizes.shape[1] - 2])
-            Y_temp = []
-            for sl in slice_cols:
-                Y_temp.append(data_to_plot[:, sl])
-            iSlicesPlot(effectSizes[0], Y_temp, \
-                        '%s/plot-slice-%s-linearregression-eff.html' % (output_dir, output_plot[index]), \
-                        'Proportion of Variables with Power (True Positive)> 0.8 -(%s)' % (corr_type[index]), \
-                        'Effect Size', 'Proportion', 'Sample Size=', sampleSizes[:, slice_cols])
-        index = index + 1
+    # #collect data from subfolders and calculate median and mean
+    # subdirs=SubDirPath(".")
+    # print(type(subdirs))
+    # newlist=patternFilter(subdirs)
+    # print(newlist)
+    #
+    # newlist1=reorder(newlist)
+    # print(newlist1)
+    #
+    #
+    # pa_methods=['diffgroups-','linearregression-']
+    # pa_opts = ['fpn', 'fpb', 'fpbh', 'fpby','tnn', 'tnb', 'tnbh', 'tnby', \
+    #                          'fdn', 'fdb', 'fdbh', 'fdby', 'fnn', 'fnb', 'fnbh', 'fnby', \
+    #                          'sfdn', 'sfdb', 'sfdbh', 'sfdby', 'stpn', 'stpb', 'stpbh', 'stpby', \
+    #                          'stnn', 'stnb', 'stnbh', 'stnby', 'sfnn', 'sfnb', 'sfnbh', 'sfnby', \
+    #                          'sfpn', 'sfpb', 'sfpbh', 'sfpby', 'tpn', 'tpb', 'tpbh', 'tpby']
+    #
+    # for mm in pa_methods:
+    #     for op in pa_opts:
+    #         savefilename = "%s/%s%s.csv" % (output_dir, mm, op)
+    #         for ll in newlist1:
+    #             srcfilename="%s/papy_output/%s%s.csv"%(ll,mm,op)
+    #             if os.path.exists(srcfilename):
+    #                 if not os.path.exists(savefilename):
+    #                     shutil.copy2(srcfilename, savefilename)
+    #                 else:
+    #                     tmpData=pd.read_csv(srcfilename)
+    #                     file_handle = file(savefilename,'a')
+    #                     np.savetxt(file_handle,np.array(tmpData), delimiter=",", fmt='%.5f')
+    #                     file_handle.close()
+    #         if os.path.exists(savefilename):
+    #             tmpData1=pd.read_csv(savefilename)
+    #             cols=tmpData1.shape[1]
+    #             col_names=tmpData1.columns[range(1,cols)]
+    #             tmpData1=tmpData1[col_names]
+    #             tmpData2=tmpData1.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).mean()
+    #             savefilename1="%s/mean-%s%s.csv" % (output_dir, mm, op)
+    #             tmpData2.to_csv(savefilename1, index=False)
+    #
+    # diff_median_files = ['output_uncTP_ratio_median', 'output_bonfTP_ratio_median', 'output_bhTP_ratio_median',
+    #                        'output_byTP_ratio_median']
+    # ln_median_files = ['output_uncTP_ratio_median_ln', 'output_bonfTP_ratio_median_ln',
+    #                        'output_bhTP_ratio_median_ln', 'output_byTP_ratio_median_ln']
+    #
+    # for ff in diff_median_files:
+    #     diff_median_tmp = pd.DataFrame()
+    #     for ll in newlist1:
+    #         srcfilename="%s/papy_output/%s.csv"%(ll,ff)
+    #         if os.path.exists(srcfilename):
+    #             tmp=pd.read_csv(srcfilename)
+    #             diff_median_tmp=diff_median_tmp.append(tmp)
+    #             #print(diff_median_tmp.size)
+    #     if not diff_median_tmp.size==0:
+    #         diff_median_tmp = diff_median_tmp.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).median()
+    #         savefilename1="%s/%s.csv"%(output_dir, ff)
+    #         diff_median_tmp.to_csv(savefilename1, index=False)
+    # for ff in ln_median_files:
+    #     ln_median_tmp = pd.DataFrame()
+    #     for ll in newlist1:
+    #         srcfilename="%s/papy_output/%s.csv"%(ll,ff)
+    #         if os.path.exists(srcfilename):
+    #             tmp = pd.read_csv(srcfilename)
+    #             ln_median_tmp=ln_median_tmp.append(tmp)
+    #     if not ln_median_tmp.size==0:
+    #         ln_median_tmp = ln_median_tmp.groupby('Effect Sizes (Sample Sizes in Columns)', as_index=False).median()
+    #         savefilename1="%s/%s.csv"%(output_dir, ff)
+    #         ln_median_tmp.to_csv(savefilename1, index=False)
+    # #plot surface plot for mean of power calculation
+    # for mm in pa_methods:
+    #     for op in pa_opts:
+    #         file_to_plot="%s/mean-%s%s.csv" % (output_dir, mm, op)
+    #         if os.path.exists(file_to_plot):
+    #             tmpData=pd.read_csv(file_to_plot)
+    #             data_to_plot=np.array(tmpData[tmpData.columns[1:]])
+    #             data_to_plot = np.expand_dims(data_to_plot,axis=0)
+    #             data_to_plot = np.expand_dims(data_to_plot, axis=0)
+    #             data_to_plot = np.expand_dims(data_to_plot, axis=0)
+    #             titles=tmpData.columns.values
+    #             sampleSizes = titles[1:].astype('int')
+    #             sampleSizes = np.expand_dims(sampleSizes, axis=0)
+    #             effectSizes = np.array(tmpData[tmpData.columns[0]])
+    #             effectSizes = np.expand_dims(effectSizes, axis=0)
+    #             iSurfacePlot(data_to_plot,"%s/plot-mean-%s%s.html" % (output_dir, mm, op), 1, 1, 1, sampleSizes, effectSizes)
+    # #plot proportion of power > 0.8
+    # output_plot=['power-rate-noCorrection-diffgroups','power-rate-bonfCorrection-diffgroups', \
+    #              'power-rate-bhCorrection-diffgroups','power-rate-byCorrection-diffgroups']
+    # corr_type=['no correction','Bonferroni correction','Benjamini-Hochberg correction','Benjamini-Yekutieli correction']
+    # index=0
+    # for ff in diff_median_files:
+    #     file_to_plot="%s/%s.csv"%(output_dir, ff)
+    #     if os.path.exists(file_to_plot):
+    #         tmpData = pd.read_csv(file_to_plot)
+    #         data_to_plot = np.array(tmpData[tmpData.columns[1:]])
+    #         titles = tmpData.columns.values
+    #         sampleSizes = titles[1:].astype('int')
+    #         sampleSizes = np.expand_dims(sampleSizes, axis=0)
+    #         effectSizes = np.array(tmpData[tmpData.columns[0]])
+    #         effectSizes = np.expand_dims(effectSizes, axis=0)
+    #         iSurfacePlotTPR(data_to_plot, '%s/plot-%s.html'%(output_dir,output_plot[index]), corr_type[index], sampleSizes, effectSizes)
+    #         slice_rows = np.array([1, int(floor(effectSizes.shape[1] / 2)), effectSizes.shape[1] - 2])
+    #         Y_temp = []
+    #         for sl in slice_rows:
+    #             Y_temp.append(data_to_plot[sl, :])
+    #         iSlicesPlot(sampleSizes[0], Y_temp, \
+    #                     '%s/plot-slice-%s.html'%(output_dir,output_plot[index]), \
+    #                     'Proportion of Variables with Power (True Positive)> 0.8 -(%s)'%(corr_type[index]), \
+    #                     'Sample Size', 'Proportion', 'Effect Size=', effectSizes[:, slice_rows])
+    #         slice_cols = np.array([1, int(floor(sampleSizes.shape[1] / 2)), sampleSizes.shape[1] - 2])
+    #         Y_temp = []
+    #         for sl in slice_cols:
+    #             Y_temp.append(data_to_plot[:,sl])
+    #         iSlicesPlot(effectSizes[0], Y_temp, \
+    #                     '%s/plot-slice-%s-eff.html'%(output_dir,output_plot[index]), \
+    #                     'Proportion of Variables with Power (True Positive)> 0.8 -(%s)'%(corr_type[index]), \
+    #                     'Effect Size', 'Proportion', 'Sample Size=', sampleSizes[:, slice_cols])
+    #     index=index+1
+    #
+    # index = 0
+    # for ff in ln_median_files:
+    #     file_to_plot = "%s/%s.csv" % (output_dir, ff)
+    #     if os.path.exists(file_to_plot):
+    #         tmpData = pd.read_csv(file_to_plot)
+    #         data_to_plot = np.array(tmpData[tmpData.columns[1:]])
+    #         titles = tmpData.columns.values
+    #         sampleSizes = titles[1:].astype('int')
+    #         sampleSizes = np.expand_dims(sampleSizes, axis=0)
+    #         effectSizes = np.array(tmpData[tmpData.columns[0]])
+    #         effectSizes = np.expand_dims(effectSizes, axis=0)
+    #         iSurfacePlotTPR(data_to_plot, '%s/plot-%s-linearregression.html' % (output_dir, output_plot[index]), corr_type[index],
+    #                         sampleSizes, effectSizes)
+    #         slice_rows = np.array([1, int(floor(effectSizes.shape[1] / 2)), effectSizes.shape[1] - 2])
+    #         Y_temp = []
+    #         for sl in slice_rows:
+    #             Y_temp.append(data_to_plot[sl, :])
+    #         iSlicesPlot(sampleSizes[0], Y_temp, \
+    #                     '%s/plot-slice-%s-linearregression.html' % (output_dir, output_plot[index]), \
+    #                     'Proportion of Variables with Power (True Positive)> 0.8 -(%s)' % (corr_type[index]), \
+    #                     'Sample Size', 'Proportion', 'Effect Size=', effectSizes[:, slice_rows])
+    #         slice_cols = np.array([1, int(floor(sampleSizes.shape[1] / 2)), sampleSizes.shape[1] - 2])
+    #         Y_temp = []
+    #         for sl in slice_cols:
+    #             Y_temp.append(data_to_plot[:, sl])
+    #         iSlicesPlot(effectSizes[0], Y_temp, \
+    #                     '%s/plot-slice-%s-linearregression-eff.html' % (output_dir, output_plot[index]), \
+    #                     'Proportion of Variables with Power (True Positive)> 0.8 -(%s)' % (corr_type[index]), \
+    #                     'Effect Size', 'Proportion', 'Sample Size=', sampleSizes[:, slice_cols])
+    #     index = index + 1
     #write a file to indicate the code is finished.
     with open("%s/complete.txt" % (args[3]) ,'w') as f:
 	f.write('test is done')
