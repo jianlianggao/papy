@@ -1729,7 +1729,8 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
 
     tmpStr = argv2.split('-')
     if len(tmpStr) > 1:
-        argv2 = [int(tmpStr[0]), int(tmpStr[1]) + 1]
+        #argv2 = [int(tmpStr[0]), int(tmpStr[1]) + 1]
+        argv2 = [0, int(tmpStr[1])- int(tmpStr[0]) + 1]
     else:
         argv2 = [0, int(argv2)]
     # debugging
