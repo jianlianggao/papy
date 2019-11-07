@@ -70,12 +70,12 @@ docker pull docker-registry.phenomenal-h2020.eu/phnmnl/papy:latest
 For direct docker usage:
 
 ```bash
-docker run docker-registry.phenomenal-h2020.eu/phnmnl/papy ...
+docker run --rm -t -v <path/to/data/dir>:/data docker-registry.phenomenal-h2020.eu/phnmnl/papy /data/<testdata_input>.csv <exp_cols_from_input_data> <sample_size> <effect_size> <number of repeats> <outcome_type> <CPU number>
 ```
 
 ## Help and Documentation
 
-Please check the "docs" folder for detail. 
+Please check the docs for detail at https://jianlianggao.github.io/papy/pa.html
 
 ## Publications
 
