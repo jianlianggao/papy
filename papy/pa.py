@@ -3,7 +3,7 @@
 Power Analysis (Python) tool
 Developed by Dr. Goncalo Correia and Dr Jianliang Gao
 Imperial College London
-2016
+2020
 
 simple usage- python pa.py TutorialData.csv 8
 
@@ -26,7 +26,7 @@ full usage- python pa.py TutorialData.csv 2-9 0:100:500 0.05:0.05:0.7 20 0 4
 import os, sys, csv, inspect, dis, os.path, random, multiprocessing, getopt
 import numpy as np
 import scipy.stats as scistats
-import statsmodels.formula.api as sm  # for linear regression
+import statsmodels.api as sm  # for linear regression ; change statsmodels.formula.api to statsmodels.api for Python 3
 import shutil  # for creating zip files
 from math import fabs, floor, ceil, log, exp
 from datetime import datetime
@@ -95,13 +95,13 @@ def iSurfacePlot(output, svfilename, variable, metric, correction, samplsizes,si
         autosize=True,
         width=1024,
         height=768,
-        margin=go.Margin(
+        margin=go.layout.Margin(
             l=80,
             r=40,
             b=100,
             t=60
         ),
-        scene=go.Scene(
+        scene=go.layout.Scene(
             xaxis=dict(
                 title='Sample Sizes',
                 range=[0, np.max(X) + 0.1]
@@ -168,7 +168,7 @@ def iSlicesPlot(X, Y, Error_y, svfilename, plot_title, x_caption, y_caption, tra
                                )
         traces.append(trace_tmp)
 
-    data = go.Data(traces)
+    data = traces # data = go.Data(traces) go.Data is deprecated.
 
     ##define other features of plots
 
@@ -291,13 +291,13 @@ def iSurfacePlotTPR(output, svfilename, correction, samplsizes, sizeeff, nreps):
         autosize=True,
         width=1024,
         height=768,
-        margin=go.Margin(
+        margin=go.layout.Margin(
             l=80,
             r=40,
             b=100,
             t=60
         ),
-        scene=go.Scene(
+        scene=go.layout.Scene(
             xaxis=dict(
                 title='Sample Sizes',
                 range=[0, np.max(X) + 0.1]
@@ -711,32 +711,35 @@ def f_multiproc_cont(sampSizes, signThreshold, effectSizes, numVars, nRepeats, n
                     stDev = np.std(SelSamples,
                                    axis=0)  # without argument ddof=1 means using default ddof=0 to work out std on population
                     SelSamples = SelSamples - np.mean(SelSamples, axis=0)
-                    SelSamples = SelSamples / stDev
+                    SelSamples = (SelSamples/ stDev).astype(float) ## SelSamples = SelSamples / stDev   doesn't work in Python 3
 
                     noiseLevel = 1
 
                     noise = noiseLevel * np.random.randn(sampSizes[0][currSampSize], 1)
-                    #noise = noiseLevel * np.random.normal(0, 1, sampSizes[0][currSampSize])
-                    #noise = np.reshape(noise, (len(noise),1))
 
                     Y = SelSamples[:, np.array([currVar+offSet])] * b1[currVar][0]
-                    #debug
-                    print(Y.shape)
-                    print("\n")
                     Y = Y + noise
 
                     p = np.zeros((1, cols))
 
                     ##Using regress for multivariate regression test
                     for i in range(0, cols):
+                                              
                         B = np.append(np.ones((Y.shape[0], 1)), SelSamples[:, [i]], axis=1)
-                        stats_result = sm.OLS(Y, B).fit()  # ordinary least square linear regression
+                        #change NaN and Inf to numbers , Python 3 can't deal with Nan and Inf values in OLS
+                        Y = np.nan_to_num(Y)
+                        B = np.nan_to_num(B)
+                 
+                        ols_model = sm.OLS(Y, B)  # ordinary least square linear regression
+                        stats_result = ols_model.fit()
                         #stats_result1 = stats_result.predict(B)
                         # OLS. The result of OLS has attributes such as
                         # .rsquared as R^2, .fvalue as F-statistics
                         # .f_pvalue as p-value of F-stats, .scale as error variance
 
                         p[0][i] = stats_result.f_pvalue
+                        
+                            
 
                     pUnc = p  ##pUnc and p have 1xnumVars elements
                     pBonf = p * cols
@@ -853,7 +856,7 @@ def f_multiproc_cont(sampSizes, signThreshold, effectSizes, numVars, nRepeats, n
 
                 ##get multiplerepeats.Bonferroni keys/fields
                 stats = []
-                for key, value in multiplerepeats.Bonferroni.iteritems():
+                for key, value in multiplerepeats.Bonferroni.items():
                     stats.append(key)
                 for currstat in stats:
                     uncStruct[currstat][currEff][currSampSize] = np.mean(multiplerepeats.noCorrection[currstat])
@@ -870,7 +873,7 @@ def f_multiproc_cont(sampSizes, signThreshold, effectSizes, numVars, nRepeats, n
 
         ## end of for currEff in range(1,nEffSizes+1):
         stats = []
-        for key, value in uncStruct.iteritems():
+        for key, value in uncStruct.items():
             stats.append(key)
         for i in range(0, len(stats)):
             try:
@@ -1397,7 +1400,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
 
                 ##get multiplerepeats.Bonferroni keys/fields
                 stats = []
-                for key, value in multiplerepeats.Bonferroni.iteritems():
+                for key, value in multiplerepeats.Bonferroni.items():
                     stats.append(key)
                 for currstat in stats:
                     uncStruct[currstat][currEff][currSampSize] = np.mean(multiplerepeats.noCorrection[currstat])
@@ -1414,7 +1417,7 @@ def f_multiproc(sampSizes, signThreshold, effectSizes, numVars, nRepeats, nSampS
 
         ## end of for currEff in range(0,nEffSizes):
         stats = []
-        for key, value in uncStruct.iteritems():
+        for key, value in uncStruct.items():
             stats.append(key)
         for i in range(0, len(stats)):
             try:
@@ -1502,12 +1505,14 @@ def expecting():
     c = f.f_code
     i = f.f_lasti
     bytecode = c.co_code
-    instruction = ord(bytecode[i + 3])
+    instruction = ord(str(bytecode[i + 3]))
+    
     if instruction == dis.opmap['UNPACK_SEQUENCE']:
-        howmany = ord(bytecode[i + 4])
+        howmany = bytecode[i + 4]
         return howmany
     elif instruction == dis.opmap['POP_TOP']:
         return 0
+    
     return 1
 
 
@@ -1577,20 +1582,20 @@ def fdr_bh(*args):
     else:
         print('Argument \'method\' needs to be \'pdep\' or \'dep\'.')
 
-    nargout = expecting()  # get the number of expecting outputs from caller
-    if (nargout > 3):
-        ##compute adjusted p-values
-        adj_p = np.zeros(m) * float('NaN')
-        wtd_p_sorted = np.sort(wtd_p)
-        wtd_p_sindex = np.argsort(wtd_p)
-        nextfill = 0
-        for k in range(0, m):
-            if (wtd_p_sindex[0][k] >= nextfill):
-                adj_p[nextfill:(wtd_p_sindex[0][k] + 1)] = wtd_p_sorted[0][k]
-                nextfill = wtd_p_sindex[0][k] + 1
-                if (nextfill > m):
-                    break
-        adj_p = np.reshape(adj_p[unsort_ids], s)
+    #nargout = expecting()  # get the number of expecting outputs from caller
+    #if (nargout > 3):
+    ##compute adjusted p-values
+    adj_p = np.zeros(m) * float('NaN')
+    wtd_p_sorted = np.sort(wtd_p)
+    wtd_p_sindex = np.argsort(wtd_p)
+    nextfill = 0
+    for k in range(0, m):
+        if (wtd_p_sindex[0][k] >= nextfill):
+            adj_p[nextfill:(wtd_p_sindex[0][k] + 1)] = wtd_p_sorted[0][k]
+            nextfill = wtd_p_sindex[0][k] + 1
+            if (nextfill > m):
+                break
+    adj_p = np.reshape(adj_p[unsort_ids], s)
 
     rej = p_sorted <= thresh
 
@@ -1730,14 +1735,13 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
         argv2 = [int(tmpStr[0]), int(tmpStr[1]) + 1]
     else:
         argv2 = [0, int(argv2)]
-    # debugging
-    print(argv2[0], argv2[1])
 
     tmpStr = argv3.split(':')
     argv3 = range(int(tmpStr[0]), int(tmpStr[2]), int(tmpStr[1]))
+    
+    argv3 = np.array(argv3)
     if argv3[0] < 1:
          argv3[0] = 1
-    argv3 = np.array(argv3)
     argv3 = np.reshape(argv3, (1, len(argv3)))
 
     tmpStr = argv4.split(':')
@@ -1838,7 +1842,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
                              ['stnn', 'stnb', 'stnbh', 'stnby'], ['sfnn', 'sfnb', 'sfnbh', 'sfnby'], \
                              ['sfpn', 'sfpb', 'sfpbh', 'sfpby'], ['tpn', 'tpb', 'tpbh', 'tpby']])
     ##save the effect sizes and sample sizes
-    file_handle = file('papy_output/effect_n_sample_sizes.txt', 'a')
+    file_handle = open('papy_output/effect_n_sample_sizes.txt', 'a')
     np.savetxt(file_handle, np.array(['effect sizes']), fmt='%s')
     np.savetxt(file_handle, effectSizes, delimiter=",", fmt='%.3f')
     np.savetxt(file_handle, np.array(['sample sizes']), fmt='%s')
@@ -1854,7 +1858,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
             # if (jj==4 and kk > 0):
             #    break;
             if (outcome_type == 0 or outcome_type == 2):
-                file_handle = file('papy_output/diffgroups-%s.csv' % (sv_filenames[jj][kk]), 'a')
+                file_handle = open('papy_output/diffgroups-%s.csv' % (sv_filenames[jj][kk]), 'a')
                 ##write the title line with columns "variables, Sample Sizes (Effect Sizes as columns), and Effect Sizes"
                 title_str = np.append(np.array([['Variables', 'Effect Sizes (Sample Sizes in Columns)']]),
                                       sampleSizes.astype('str'), axis=1)
@@ -1869,7 +1873,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
                                delimiter=",", fmt='%.5f')
                 file_handle.close()
             if (outcome_type == 1 or outcome_type == 2):
-                file_handle = file('papy_output/linearregression-%s.csv' % (sv_filenames[jj][kk]), 'a')
+                file_handle = open('papy_output/linearregression-%s.csv' % (sv_filenames[jj][kk]), 'a')
                 ##write the title line with columns "variables, Sample Sizes (Effect Sizes as columns), and Effect Sizes"
                 title_str = np.append(np.array([['Variables', 'Effect Sizes (Sample Sizes in Columns)']]),
                                       sampleSizes.astype('str'), axis=1)
@@ -2113,7 +2117,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
                 # for calculating standard deviation
                 std_diffgroups_array = np.std(temp_diffgroups_array, axis=0)
 
-                file_handle = file('papy_output/mean-diffgroups-%s.csv' % (sv_filenames[jj][kk]), 'a')
+                file_handle = open('papy_output/mean-diffgroups-%s.csv' % (sv_filenames[jj][kk]), 'a')
                 np.savetxt(file_handle, mean_diffgroups_array, delimiter=",", fmt='%.10f')
                 file_handle.close()
 
@@ -2123,7 +2127,7 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
                 # for calculating standard deviation
                 std_linearregression_array = np.std(temp_linearregression_array, axis=0)
 
-                file_handle = file('papy_output/mean-linearregression-%s.csv' % (sv_filenames[jj][kk]), 'a')
+                file_handle = open('papy_output/mean-linearregression-%s.csv' % (sv_filenames[jj][kk]), 'a')
                 np.savetxt(file_handle, mean_linearregression_array, delimiter=",", fmt='%.10f')
                 file_handle.close()
 
@@ -2180,9 +2184,9 @@ def main(argv1, argv2, argv3, argv4, argv5, argv6, argv7):
 if __name__ == "__main__":
     ##detect python version#
     ver = sys.version
-    if not ('2.7' in ver):
-        print('This tool currently only runs in Python 2.7. Please install Python 2.7')
-        exit(0)
+    ##if not ('2.7' in ver):
+    ##    print('This tool currently only runs in Python 2.7. Please install Python 2.7')
+    ##    exit(0)
 
     ##start to parse input arguments
     args = sys.argv
